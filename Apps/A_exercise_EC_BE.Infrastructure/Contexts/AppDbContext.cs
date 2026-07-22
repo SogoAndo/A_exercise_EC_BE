@@ -1,0 +1,48 @@
+using A_exercise_EC_BE.Infrastructure.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace A_exercise_EC_BE.Infrastructure.Contexts;
+
+/// <summary>
+/// 管理側と共有するPostgreSQLデータベースのコンテキスト。
+/// </summary>
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+{
+    public DbSet<ProductCategoryEntity> ProductCategories => Set<ProductCategoryEntity>();
+    public DbSet<ProductEntity> Products => Set<ProductEntity>();
+    public DbSet<ProductStockEntity> ProductStocks => Set<ProductStockEntity>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ProductCategoryEntity>(entity =>
+        {
+            entity.HasIndex(category => category.CategoryUuid).IsUnique();
+            entity.Property(category => category.Name).HasMaxLength(30).IsRequired();
+        });
+
+        modelBuilder.Entity<ProductEntity>(entity =>
+        {
+            entity.HasIndex(product => product.ProductUuid).IsUnique();
+            entity.Property(product => product.Name).HasMaxLength(100).IsRequired();
+            entity.Property(product => product.ImageUrl).HasMaxLength(200);
+            entity.Property(product => product.DeleteFlg).HasDefaultValue(0);
+
+            entity.HasOne(product => product.ProductCategory)
+                .WithMany(category => category.Products)
+                .HasForeignKey(product => product.ProductCategoryId)
+                .HasConstraintName("fk_product_category")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(product => product.ProductStock)
+                .WithOne(stock => stock.Product)
+                .HasForeignKey<ProductStockEntity>(stock => stock.ProductId)
+                .HasConstraintName("fk_product_stock_product")
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProductStockEntity>(entity =>
+        {
+            entity.HasIndex(stock => stock.StockUuid).IsUnique();
+        });
+    }
+}
