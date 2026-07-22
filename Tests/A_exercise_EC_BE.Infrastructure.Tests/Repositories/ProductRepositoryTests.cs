@@ -119,20 +119,20 @@ public class ProductRepositoryTests
         ProductCategoryEntity category,
         int deleteFlg,
         int quantity) => new()
-    {
-        Id = id,
-        ProductUuid = productUuid,
-        Name = name,
-        Price = 120,
-        ProductCategoryId = category.Id,
-        ProductCategory = category,
-        DeleteFlg = deleteFlg,
-        ProductStock = new ProductStockEntity
         {
             Id = id,
-            StockUuid = Guid.NewGuid(),
-            ProductId = id,
-            Quantity = quantity
-        }
-    };
+            ProductUuid = productUuid,
+            Name = name,
+            Price = 120,
+            ProductCategoryId = category.Id,
+            ProductCategory = category,
+            DeleteFlg = deleteFlg,
+            ProductStock = new ProductStockEntity
+            {
+                Id = id,
+                StockUuid = Guid.NewGuid(),
+                ProductId = id,
+                Quantity = quantity
+            }
+        };
 }
