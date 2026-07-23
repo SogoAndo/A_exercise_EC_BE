@@ -13,6 +13,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ProductEntity> Products => Set<ProductEntity>();
     public DbSet<ProductStockEntity> ProductStocks => Set<ProductStockEntity>();
 
+    public DbSet<PaymentMethodEntity> PaymentMethods => Set<PaymentMethodEntity>();
+    public DbSet<OrderStatusEntity> OrderStatuses => Set<OrderStatusEntity>();
+    public DbSet<OrdersEntity> Orders => Set<OrdersEntity>();
+    public DbSet<OrdersDetailEntity> OrdersDetails => Set<OrdersDetailEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CustomerEntity>(entity =>
@@ -27,7 +32,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(customer => customer.PhoneNumber).HasMaxLength(20).IsRequired();
             entity.Property(customer => customer.MailAddress).HasMaxLength(200).IsRequired();
             entity.Property(customer => customer.Username).HasMaxLength(30).IsRequired();
-            entity.Property(customer => customer.PasswordHash).HasMaxLength(255).IsRequired();
+            entity.Property(customer => customer.Password).HasMaxLength(255).IsRequired();
         });
 
         modelBuilder.Entity<ProductCategoryEntity>(entity =>
