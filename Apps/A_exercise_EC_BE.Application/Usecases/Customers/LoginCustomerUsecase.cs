@@ -23,9 +23,11 @@ public class LoginCustomerUsecase(
 
         var customer = await customerRepository.FindByMailAddressAsync(
             request.MailAddress);
+        var isPasswordValid = passwordVerifier.Verify(
+            customer?.Password,
+            request.Password);
 
-        if (customer is null
-            || !passwordVerifier.Verify(customer.PasswordHash, request.Password))
+        if (customer is null || !isPasswordValid)
         {
             throw new UnauthorizedAccessException(AuthenticationFailedMessage);
         }

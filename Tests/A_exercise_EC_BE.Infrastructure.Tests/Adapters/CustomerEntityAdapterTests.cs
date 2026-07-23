@@ -21,7 +21,7 @@ public class CustomerEntityAdapterTests
         Assert.AreEqual(entity.Name, customer.Name);
         Assert.AreEqual(entity.Kana, customer.Kana);
         Assert.AreEqual(entity.MailAddress, customer.MailAddress);
-        Assert.AreEqual(entity.PasswordHash, customer.PasswordHash);
+        Assert.AreEqual(entity.Password, customer.Password);
         Assert.AreEqual(entity.CreatedAt, customer.CreatedAt);
     }
 
@@ -43,7 +43,7 @@ public class CustomerEntityAdapterTests
         PhoneNumber = "09012345678",
         MailAddress = "taro@example.com",
         Username = "taro",
-        PasswordHash = "hashed-password",
+        Password = "hashed-password",
         CreatedAt = new DateTime(2026, 7, 23, 10, 0, 0)
     };
 }

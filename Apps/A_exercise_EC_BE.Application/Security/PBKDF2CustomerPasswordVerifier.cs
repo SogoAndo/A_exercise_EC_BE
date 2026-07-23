@@ -6,13 +6,24 @@ namespace A_exercise_EC_BE.Application.Security;
 /// <summary>
 /// ASP.NET Core Identity V3形式のPBKDF2ハッシュで顧客パスワードを検証する。
 /// </summary>
-public sealed class PBKDF2CustomerPasswordVerifier(
-    IPasswordHasher<CustomerPasswordContext> passwordHasher)
-    : ICustomerPasswordVerifier
+public sealed class PBKDF2CustomerPasswordVerifier : ICustomerPasswordVerifier
 {
-    public bool Verify(string passwordHash, string providedPassword)
+    private readonly IPasswordHasher<CustomerPasswordContext> _passwordHasher;
+    private readonly string _dummyPasswordHash;
+
+    public PBKDF2CustomerPasswordVerifier(
+        IPasswordHasher<CustomerPasswordContext> passwordHasher)
     {
-        if (string.IsNullOrWhiteSpace(passwordHash))
+        _passwordHasher = passwordHasher
+            ?? throw new ArgumentNullException(nameof(passwordHasher));
+        _dummyPasswordHash = _passwordHasher.HashPassword(
+            new CustomerPasswordContext(),
+            Guid.NewGuid().ToString("N"));
+    }
+
+    public bool Verify(string? passwordHash, string providedPassword)
+    {
+        if (passwordHash is not null && string.IsNullOrWhiteSpace(passwordHash))
         {
             throw new DomainException("パスワードハッシュは必須です。");
         }
@@ -25,9 +36,9 @@ public sealed class PBKDF2CustomerPasswordVerifier(
         PasswordVerificationResult result;
         try
         {
-            result = passwordHasher.VerifyHashedPassword(
+            result = _passwordHasher.VerifyHashedPassword(
                 new CustomerPasswordContext(),
-                passwordHash,
+                passwordHash ?? _dummyPasswordHash,
                 providedPassword);
         }
         catch (FormatException)

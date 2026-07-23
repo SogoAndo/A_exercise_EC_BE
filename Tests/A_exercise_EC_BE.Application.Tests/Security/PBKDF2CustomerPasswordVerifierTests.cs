@@ -47,11 +47,27 @@ public class PBKDF2CustomerPasswordVerifierTests
     }
 
     [TestMethod]
+    public void Verify_WithoutCustomer_PerformsDummyHashVerificationAndReturnsFalse()
+    {
+        var passwordHasher = new PasswordHasher<CustomerPasswordContext>();
+        var verifier = new PBKDF2CustomerPasswordVerifier(passwordHasher);
+
+        var result = verifier.Verify(null, "Password123");
+
+        Assert.IsFalse(result);
+    }
+
+    [TestMethod]
     [DataRow("")]
     [DataRow("   ")]
     public void Verify_WithoutPasswordHash_ThrowsDomainException(string passwordHash)
     {
         var passwordHasherMock = new Mock<IPasswordHasher<CustomerPasswordContext>>();
+        passwordHasherMock
+            .Setup(hasher => hasher.HashPassword(
+                It.IsAny<CustomerPasswordContext>(),
+                It.IsAny<string>()))
+            .Returns("dummy-password-hash");
         var verifier = new PBKDF2CustomerPasswordVerifier(passwordHasherMock.Object);
 
         Assert.ThrowsExactly<DomainException>(
@@ -71,6 +87,11 @@ public class PBKDF2CustomerPasswordVerifierTests
         string providedPassword)
     {
         var passwordHasherMock = new Mock<IPasswordHasher<CustomerPasswordContext>>();
+        passwordHasherMock
+            .Setup(hasher => hasher.HashPassword(
+                It.IsAny<CustomerPasswordContext>(),
+                It.IsAny<string>()))
+            .Returns("dummy-password-hash");
         var verifier = new PBKDF2CustomerPasswordVerifier(passwordHasherMock.Object);
 
         Assert.ThrowsExactly<DomainException>(
@@ -87,6 +108,11 @@ public class PBKDF2CustomerPasswordVerifierTests
     public void Verify_WhenRehashIsNeeded_ReturnsTrue()
     {
         var passwordHasherMock = new Mock<IPasswordHasher<CustomerPasswordContext>>();
+        passwordHasherMock
+            .Setup(hasher => hasher.HashPassword(
+                It.IsAny<CustomerPasswordContext>(),
+                It.IsAny<string>()))
+            .Returns("dummy-password-hash");
         passwordHasherMock
             .Setup(hasher => hasher.VerifyHashedPassword(
                 It.IsAny<CustomerPasswordContext>(),

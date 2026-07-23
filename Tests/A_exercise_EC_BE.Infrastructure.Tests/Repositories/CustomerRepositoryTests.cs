@@ -43,7 +43,7 @@ public class CustomerRepositoryTests
         Assert.IsNotNull(customer);
         Assert.AreEqual(_customerUuid, customer.CustomerUuid);
         Assert.AreEqual("taro@example.com", customer.MailAddress);
-        Assert.AreEqual("hashed-password", customer.PasswordHash);
+        Assert.AreEqual("hashed-password", customer.Password);
     }
 
     [TestMethod]
@@ -59,13 +59,13 @@ public class CustomerRepositoryTests
         Id = 1,
         CustomerUuid = _customerUuid,
         Name = "山田太郎",
-        Kana = null,
+        Kana = "ヤマダタロウ",
         Address1 = "東京都千代田区",
         Address2 = null,
         PhoneNumber = "09012345678",
         MailAddress = "taro@example.com",
         Username = "taro",
-        PasswordHash = "hashed-password",
+        Password = "hashed-password",
         CreatedAt = new DateTime(2026, 7, 23, 10, 0, 0)
     };
 }

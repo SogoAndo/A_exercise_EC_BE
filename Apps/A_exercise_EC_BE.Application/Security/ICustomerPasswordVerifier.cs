@@ -5,5 +5,5 @@ namespace A_exercise_EC_BE.Application.Security;
 /// </summary>
 public interface ICustomerPasswordVerifier
 {
-    bool Verify(string passwordHash, string providedPassword);
+    bool Verify(string? passwordHash, string providedPassword);
 }

@@ -40,9 +40,9 @@ public class AppDbContextTests
         Assert.AreEqual("customer", customer.GetTableName());
         Assert.AreEqual(20, customer.FindProperty(nameof(CustomerEntity.Name))?.GetMaxLength());
         Assert.AreEqual(20, customer.FindProperty(nameof(CustomerEntity.Kana))?.GetMaxLength());
-        Assert.IsTrue(customer.FindProperty(nameof(CustomerEntity.Kana))?.IsNullable);
+        Assert.IsFalse(customer.FindProperty(nameof(CustomerEntity.Kana))?.IsNullable);
         Assert.AreEqual(200, customer.FindProperty(nameof(CustomerEntity.MailAddress))?.GetMaxLength());
-        Assert.AreEqual("password", customer.FindProperty(nameof(CustomerEntity.PasswordHash))
+        Assert.AreEqual("password", customer.FindProperty(nameof(CustomerEntity.Password))
             ?.GetColumnName(StoreObjectIdentifier.Table("customer")));
         Assert.IsTrue(customer.GetIndexes().Single(index =>
             index.Properties.Single().Name == nameof(CustomerEntity.MailAddress)).IsUnique);

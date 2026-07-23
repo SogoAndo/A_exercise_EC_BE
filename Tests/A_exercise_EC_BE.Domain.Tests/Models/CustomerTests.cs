@@ -19,17 +19,23 @@ public class CustomerTests
         Assert.AreEqual("山田太郎", customer.Name);
         Assert.AreEqual("ヤマダタロウ", customer.Kana);
         Assert.AreEqual("taro@example.com", customer.MailAddress);
-        Assert.AreEqual("hashed-password", customer.PasswordHash);
+        Assert.AreEqual("hashed-password", customer.Password);
         Assert.AreEqual(createdAt, customer.CreatedAt);
     }
 
     [TestMethod]
-    public void Constructor_WithNullableDdlValues_CreatesCustomer()
+    public void Constructor_WithoutOptionalAddress_CreatesCustomer()
     {
-        var customer = CreateCustomer(kana: null, address2: null);
+        var customer = CreateCustomer(address2: null);
 
-        Assert.IsNull(customer.Kana);
         Assert.IsNull(customer.Address2);
+    }
+
+    [TestMethod]
+    public void Constructor_WithoutKana_ThrowsDomainException()
+    {
+        Assert.ThrowsExactly<DomainException>(
+            () => CreateCustomer(kana: null!));
     }
 
     [TestMethod]
@@ -55,7 +61,7 @@ public class CustomerTests
 
     private static Customer CreateCustomer(
         Guid? customerUuid = null,
-        string? kana = "ヤマダタロウ",
+        string kana = "ヤマダタロウ",
         string? address2 = "101号室",
         string passwordHash = "hashed-password",
         DateTime? createdAt = null) => new(

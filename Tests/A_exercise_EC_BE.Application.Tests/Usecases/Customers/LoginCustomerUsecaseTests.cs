@@ -36,7 +36,7 @@ public class LoginCustomerUsecaseTests
             .Setup(repository => repository.FindByMailAddressAsync(request.MailAddress))
             .ReturnsAsync(customer);
         _passwordVerifierMock
-            .Setup(verifier => verifier.Verify(customer.PasswordHash, request.Password))
+            .Setup(verifier => verifier.Verify(customer.Password, request.Password))
             .Returns(true);
 
         var result = await _usecase.LoginAsync(request);
@@ -48,7 +48,7 @@ public class LoginCustomerUsecaseTests
             repository => repository.FindByMailAddressAsync(request.MailAddress),
             Times.Once);
         _passwordVerifierMock.Verify(
-            verifier => verifier.Verify(customer.PasswordHash, request.Password),
+            verifier => verifier.Verify(customer.Password, request.Password),
             Times.Once);
     }
 
@@ -100,6 +100,9 @@ public class LoginCustomerUsecaseTests
         _repositoryMock
             .Setup(repository => repository.FindByMailAddressAsync(request.MailAddress))
             .ReturnsAsync((Customer?)null);
+        _passwordVerifierMock
+            .Setup(verifier => verifier.Verify(null, request.Password))
+            .Returns(false);
 
         var exception = await Assert.ThrowsExactlyAsync<UnauthorizedAccessException>(
             () => _usecase.LoginAsync(request));
@@ -108,8 +111,8 @@ public class LoginCustomerUsecaseTests
             "メールアドレスまたはパスワードが正しくありません。",
             exception.Message);
         _passwordVerifierMock.Verify(
-            verifier => verifier.Verify(It.IsAny<string>(), It.IsAny<string>()),
-            Times.Never);
+            verifier => verifier.Verify(null, request.Password),
+            Times.Once);
     }
 
     [TestMethod]
@@ -123,7 +126,7 @@ public class LoginCustomerUsecaseTests
             .Setup(repository => repository.FindByMailAddressAsync(request.MailAddress))
             .ReturnsAsync(customer);
         _passwordVerifierMock
-            .Setup(verifier => verifier.Verify(customer.PasswordHash, request.Password))
+            .Setup(verifier => verifier.Verify(customer.Password, request.Password))
             .Returns(false);
 
         var exception = await Assert.ThrowsExactlyAsync<UnauthorizedAccessException>(
@@ -140,7 +143,7 @@ public class LoginCustomerUsecaseTests
             repository => repository.FindByMailAddressAsync(It.IsAny<string>()),
             Times.Never);
         _passwordVerifierMock.Verify(
-            verifier => verifier.Verify(It.IsAny<string>(), It.IsAny<string>()),
+            verifier => verifier.Verify(It.IsAny<string?>(), It.IsAny<string>()),
             Times.Never);
     }
 
