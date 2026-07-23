@@ -1,25 +1,24 @@
-using A_exercise_EC_BE.Domains.Exceptions;
 namespace A_exercise_EC_BE.Application.Security;
+
 /// <summary>
-/// パスワードのハッシュ化と検証機能を提供するインターフェイス
+/// パスワードのハッシュ化を行うサービス
 /// </summary>
 public interface IPasswordHashingService
 {
     /// <summary>
-    /// 平文のパスワードをハッシュ化する
+    /// 平文パスワードをハッシュ化する
     /// </summary>
-    /// <param name="rawPassword">平文パスワード</param>
-    /// <returns>ハッシュ化されたパスワード</returns>
-    string Hash(string rawPassword);
+    /// <param name="password">平文パスワード</param>
+    /// <returns>ハッシュ化済みパスワード</returns>
+    string Hash(string password);
 
     /// <summary>
-    /// パスワードの比較結果を返す
+    /// 平文パスワードとハッシュ値を照合する
     /// </summary>
-    /// <param name="hashedPassword">ハッシュされたパスワード</param>
-    /// <param name="providedPassword">平文のパスワード</param>
-    /// <returns>true:一致、false:不一致</returns>
-    /// <exception cref="PasswordRehashNeededException">
-    /// 　パスワードは一致したが、ハッシュの形式や強度が古い場合にスローされる
-    /// </exception>
-    bool Verify(string hashedPassword, string providedPassword);
+    /// <param name="password">平文パスワード</param>
+    /// <param name="hashedPassword">ハッシュ化済みパスワード</param>
+    /// <returns>一致する場合true</returns>
+    bool Verify(
+        string password,
+        string hashedPassword);
 }

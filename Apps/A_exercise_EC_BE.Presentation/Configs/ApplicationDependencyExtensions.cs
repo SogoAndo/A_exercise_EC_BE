@@ -80,6 +80,7 @@ public static class ApplicationDependencyExtensions
     private static IServiceCollection AddApplicationLayerDependencies(
     this IServiceCollection services, IConfiguration config)
     {
+        services.AddScoped<IPasswordHashingService, PasswordHashingService>();
         services.AddScoped<IRegisterCustomerAccountUsecase, RegisterCustomerAccountUsecase>();
         return services;
     }
