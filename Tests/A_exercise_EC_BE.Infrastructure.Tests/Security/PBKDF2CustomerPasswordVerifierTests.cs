@@ -1,12 +1,12 @@
-using A_exercise_EC_BE.Application.Security;
 using A_exercise_EC_BE.Domain.Exceptions;
+using A_exercise_EC_BE.Infrastructure.Security;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 
-namespace A_exercise_EC_BE.Application.Tests.Security;
+namespace A_exercise_EC_BE.Infrastructure.Tests.Security;
 
 [TestClass]
-[TestCategory("Application/Security")]
+[TestCategory("Infrastructure/Security")]
 public class PBKDF2CustomerPasswordVerifierTests
 {
     [TestMethod]

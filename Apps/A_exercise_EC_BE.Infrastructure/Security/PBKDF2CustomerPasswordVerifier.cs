@@ -1,7 +1,8 @@
+using A_exercise_EC_BE.Application.Security;
 using A_exercise_EC_BE.Domain.Exceptions;
 using Microsoft.AspNetCore.Identity;
 
-namespace A_exercise_EC_BE.Application.Security;
+namespace A_exercise_EC_BE.Infrastructure.Security;
 
 /// <summary>
 /// ASP.NET Core Identity V3形式のPBKDF2ハッシュで顧客パスワードを検証する。
