@@ -11,7 +11,7 @@ using A_exercise_EC_BE.Application.Security;
 using A_exercise_EC_BE.Application.Usecases;
 using A_exercise_EC_BE.Application.Usecases.Customers;
 
-namespace A_exercise_EC_BE.Presentations.Configs;
+namespace A_exercise_EC_BE.Presentation.Configs;
 /// <summary>
 /// 依存関係(DI)の設定
 /// インフラストラクチャ層、アプリケーション層、プレゼンテーション層

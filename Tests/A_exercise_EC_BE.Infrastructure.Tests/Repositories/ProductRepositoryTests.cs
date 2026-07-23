@@ -1,138 +1,852 @@
+using A_exercise_EC_BE.Domain.Exceptions;
+using A_exercise_EC_BE.Domain.Models;
+using A_exercise_EC_BE.Domain.Repositories;
 using A_exercise_EC_BE.Infrastructure.Adapters;
 using A_exercise_EC_BE.Infrastructure.Contexts;
 using A_exercise_EC_BE.Infrastructure.Entities;
 using A_exercise_EC_BE.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using A_exercise_EC_BE.Presentation.Configs;
 
 namespace A_exercise_EC_BE.Infrastructure.Tests.Repositories;
 
+/// <summary>
+/// 商品Repositoryのテスト。
+/// </summary>
 [TestClass]
+[DoNotParallelize]
 [TestCategory("Infrastructure/Repositories")]
 public class ProductRepositoryTests
 {
-    private AppDbContext _context = null!;
-    private ProductRepository _repository = null!;
-    private Guid _stationeryCategoryUuid;
-    private Guid _activeProductUuid;
-    private Guid _deletedProductUuid;
+    /// <summary>
+    /// テスト対象Repository取得用のサービススコープ。
+    /// </summary>
+    private IServiceScope scope = null!;
 
+    /// <summary>
+    /// テスト対象Repository。
+    /// </summary>
+    private IProductRepository repository = null!;
+
+    /// <summary>
+    /// テストデータ確認・登録用DbContext。
+    /// </summary>
+    private AppDbContext dbContext = null!;
+
+    /// <summary>
+    /// DI設定済みServiceProvider。
+    ///
+    /// プロジェクトですでに共通ServiceProviderを構築している場合は、
+    /// そのフィールドを使用してください。
+    /// </summary>
+    private static ServiceProvider provider = null!;
+
+    /// <summary>
+    /// テストクラス全体の初期化。
+    /// </summary>
+    [ClassInitialize]
+    public static void ClassInitialize(
+        TestContext testContext)
+    {
+        var config = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile(
+                "appsettings.Test.json",
+                optional: false)
+            .AddJsonFile(
+                "appsettings.Test.local.json",
+                optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        provider = ApplicationDependencyExtensions.BuildAppProvider(config);
+    }
+
+    /// <summary>
+    /// テストクラス全体の終了処理。
+    /// </summary>
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        provider?.Dispose();
+    }
+
+    /// <summary>
+    /// 各テスト実行前の初期化。
+    /// </summary>
     [TestInitialize]
-    public async Task Initialize()
+    public void TestInitialize()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
+        scope =
+            provider.CreateScope();
 
-        _context = new AppDbContext(options);
-        var factory = new ProductFactory(
-            new ProductEntityAdapter(
-                new ProductCategoryEntityAdapter(),
-                new ProductStockEntityAdapter()));
-        _repository = new ProductRepository(_context, factory);
+        repository =
+            scope.ServiceProvider
+                .GetRequiredService<IProductRepository>();
 
-        await SeedAsync();
+        dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
     }
 
+    /// <summary>
+    /// 各テスト実行後の終了処理。
+    /// </summary>
     [TestCleanup]
-    public async Task Cleanup()
+    public void TestCleanup()
     {
-        await _context.DisposeAsync();
+        scope.Dispose();
     }
 
-    [TestMethod]
-    public async Task FindAllAsync_ReturnsOnlyActiveProducts()
-    {
-        var products = await _repository.FindAllAsync();
+    /*
+     * FindAllAsync
+     */
 
-        Assert.HasCount(2, products);
-        Assert.IsTrue(products.All(product => product.DeleteFlg == 0));
+    /// <summary>
+    /// 未削除の商品一覧を正常に取得できることを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "未削除の商品一覧を正常に取得できる")]
+    public async Task
+        FindAllAsync_WhenActiveProductsExist_ShouldReturnProducts()
+    {
+        // Act
+        var result =
+            await repository.FindAllAsync();
+
+        // Assert
+        Assert.IsNotNull(
+            result);
+
+        Assert.IsNotEmpty(
+            result);
+
+        Assert.IsTrue(
+            result.All(
+                product =>
+                    product.DeleteFlg == 0));
+
+        Assert.IsTrue(
+            result.All(
+                product =>
+                    product.ProductCategory
+                    is not null));
+
+        Assert.IsTrue(
+            result.All(
+                product =>
+                    product.ProductStock
+                    is not null));
     }
 
-    [TestMethod]
-    public async Task SelectByProductCategoryIdAsync_ReturnsActiveProductsInCategory()
+    /// <summary>
+    /// 商品がIDの昇順で取得されることを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "商品一覧がIDの昇順で取得される")]
+    public async Task
+        FindAllAsync_WhenProductsExist_ShouldReturnProductsInIdOrder()
     {
-        var products = await _repository.SelectByProductCategoryIdAsync(
-            _stationeryCategoryUuid);
+        // Arrange
+        var expectedEntities =
+            await dbContext.Products
+                .AsNoTracking()
+                .Where(
+                    product =>
+                        product.DeleteFlg == 0)
+                .OrderBy(
+                    product =>
+                        product.Id)
+                .ToListAsync();
 
-        Assert.HasCount(1, products);
-        Assert.AreEqual(_activeProductUuid, products[0].ProductUuid);
+        // Act
+        var result =
+            await repository.FindAllAsync();
+
+        // Assert
+        Assert.AreEqual(
+            expectedEntities.Count,
+            result.Count);
+
+        var expectedUuids =
+            expectedEntities
+                .Select(
+                    product =>
+                        product.ProductUuid)
+                .ToList();
+
+        var actualUuids =
+            result
+                .Select(
+                    product =>
+                        product.ProductUuid)
+                .ToList();
+
+        CollectionAssert.AreEqual(
+            expectedUuids,
+            actualUuids);
     }
 
-    [TestMethod]
-    public async Task SelectByProductCategoryIdAsync_WithoutMatch_ReturnsEmptyList()
+    /// <summary>
+    /// 削除済み商品が一覧に含まれないことを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "削除済み商品は商品一覧に含まれない")]
+    public async Task
+        FindAllAsync_WhenDeletedProductsExist_ShouldExcludeDeletedProducts()
     {
-        var products = await _repository.SelectByProductCategoryIdAsync(Guid.NewGuid());
+        // Arrange
+        var category =
+            await GetExistingCategoryAsync();
 
-        Assert.IsEmpty(products);
-    }
+        var productUuid =
+            Guid.NewGuid();
 
-    [TestMethod]
-    public async Task FindByIdAsync_WithActiveProduct_ReturnsProduct()
-    {
-        var product = await _repository.FindByIdAsync(_activeProductUuid);
+        var product =
+            CreateProductEntity(
+                productUuid,
+                "削除済み一覧確認商品",
+                category,
+                deleteFlg: 1);
 
-        Assert.IsNotNull(product);
-        Assert.AreEqual(_activeProductUuid, product.ProductUuid);
-        Assert.AreEqual("文房具", product.ProductCategory.Name);
-        Assert.AreEqual(80, product.ProductStock.Quantity);
-    }
+        dbContext.Products.Add(
+            product);
 
-    [TestMethod]
-    public async Task FindByIdAsync_WithDeletedProduct_ReturnsNull()
-    {
-        var product = await _repository.FindByIdAsync(_deletedProductUuid);
+        await dbContext.SaveChangesAsync();
 
-        Assert.IsNull(product);
-    }
-
-    private async Task SeedAsync()
-    {
-        _stationeryCategoryUuid = Guid.NewGuid();
-        _activeProductUuid = Guid.NewGuid();
-        _deletedProductUuid = Guid.NewGuid();
-
-        var stationery = new ProductCategoryEntity
+        try
         {
-            Id = 1,
-            CategoryUuid = _stationeryCategoryUuid,
-            Name = "文房具"
-        };
-        var accessories = new ProductCategoryEntity
+            // Act
+            var result =
+                await repository.FindAllAsync();
+
+            // Assert
+            Assert.IsFalse(
+                result.Any(
+                    item =>
+                        item.ProductUuid
+                        == productUuid));
+        }
+        finally
         {
-            Id = 2,
-            CategoryUuid = Guid.NewGuid(),
-            Name = "雑貨"
-        };
-
-        _context.Products.AddRange(
-            CreateProduct(1, _activeProductUuid, "水性ボールペン", stationery, 0, 80),
-            CreateProduct(2, _deletedProductUuid, "削除済み商品", stationery, 1, 10),
-            CreateProduct(3, Guid.NewGuid(), "折り畳み傘", accessories, 0, 25));
-
-        await _context.SaveChangesAsync();
+            await DeleteProductAsync(
+                productUuid);
+        }
     }
 
-    private static ProductEntity CreateProduct(
-        int id,
-        Guid productUuid,
-        string name,
-        ProductCategoryEntity category,
-        int deleteFlg,
-        int quantity) => new()
+    /// <summary>
+    /// 商品が存在しない場合に空リストが返ることを確認する。
+    ///
+    /// 共用テストDBの全商品を削除するのは危険なので、
+    /// このテストは専用の空DBを使用できる場合のみ追加してください。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "未削除の商品が存在しない場合は空リストを返す")]
+    [Ignore(
+        "空の専用テストDBを用意できる場合に有効化してください。")]
+    public async Task
+        FindAllAsync_WhenActiveProductsDoNotExist_ShouldReturnEmptyList()
+    {
+        // Act
+        var result =
+            await repository.FindAllAsync();
+
+        // Assert
+        Assert.IsNotNull(
+            result);
+
+        Assert.IsEmpty(
+            result);
+    }
+
+    /// <summary>
+    /// DB接続エラーをInternalExceptionへ変換することを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "商品一覧取得時にDB接続エラーが発生した場合はInternalExceptionを送出する")]
+    public async Task
+        FindAllAsync_WhenDatabaseConnectionFails_ShouldThrowInternalException()
+    {
+        // Arrange
+        await using var errorContext =
+            CreateConnectionErrorContext();
+
+        var factory =
+            scope.ServiceProvider
+                .GetRequiredService<ProductFactory>();
+
+        var errorRepository =
+            new ProductRepository(
+                errorContext,
+                factory);
+
+        // Act
+        var exception =
+            await Assert
+                .ThrowsExactlyAsync<InternalException>(
+                    async () =>
+                    {
+                        await errorRepository
+                            .FindAllAsync();
+                    });
+
+        // Assert
+        Assert.AreEqual(
+            "商品一覧の取得中に予期しないエラーが発生しました。",
+            exception.Message);
+
+        Assert.IsNotNull(
+            exception.InnerException);
+    }
+
+    /*
+     * SelectByProductCategoryIdAsync
+     */
+
+    /// <summary>
+    /// 指定したカテゴリの商品を取得できることを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "指定したカテゴリの未削除商品一覧を取得できる")]
+    public async Task
+        SelectByProductCategoryIdAsync_WhenProductsExist_ShouldReturnProducts()
+    {
+        // Arrange
+        var category =
+            await GetExistingCategoryAsync();
+
+        // Act
+        var result =
+            await repository
+                .SelectByProductCategoryIdAsync(
+                    category.CategoryUuid);
+
+        // Assert
+        Assert.IsNotNull(
+            result);
+
+        Assert.IsTrue(
+            result.All(
+                product =>
+                    product.DeleteFlg == 0));
+
+        Assert.IsTrue(
+            result.All(
+                product =>
+                    product.ProductCategory
+                    is not null));
+
+        Assert.IsTrue(
+            result.All(
+                product =>
+                    product.ProductCategory!
+                        .CategoryUuid
+                    == category.CategoryUuid));
+    }
+
+    /// <summary>
+    /// 指定したカテゴリの商品だけが取得されることを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "指定カテゴリ以外の商品は取得されない")]
+    public async Task
+        SelectByProductCategoryIdAsync_WhenOtherCategoryProductsExist_ShouldExcludeThem()
+    {
+        // Arrange
+        var categories =
+            await dbContext.ProductCategories
+                .AsNoTracking()
+                .OrderBy(
+                    category =>
+                        category.Id)
+                .Take(2)
+                .ToListAsync();
+
+        Assert.HasCount(
+            2,
+            categories,
+            "テストには2件以上の商品カテゴリが必要です。");
+
+        var targetCategory =
+            categories[0];
+
+        var otherCategory =
+            categories[1];
+
+        // Act
+        var result =
+            await repository
+                .SelectByProductCategoryIdAsync(
+                    targetCategory.CategoryUuid);
+
+        // Assert
+        Assert.IsFalse(
+            result.Any(
+                product =>
+                    product.ProductCategory
+                        ?.CategoryUuid
+                    == otherCategory.CategoryUuid));
+
+        Assert.IsTrue(
+            result.All(
+                product =>
+                    product.ProductCategory
+                        ?.CategoryUuid
+                    == targetCategory.CategoryUuid));
+    }
+
+    /// <summary>
+    /// 指定カテゴリの削除済み商品が除外されることを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "指定カテゴリの削除済み商品は取得されない")]
+    public async Task
+        SelectByProductCategoryIdAsync_WhenDeletedProductExists_ShouldExcludeDeletedProduct()
+    {
+        // Arrange
+        var category =
+            await GetExistingCategoryAsync();
+
+        var productUuid =
+            Guid.NewGuid();
+
+        var product =
+            CreateProductEntity(
+                productUuid,
+                "カテゴリ削除済み確認商品",
+                category,
+                deleteFlg: 1);
+
+        dbContext.Products.Add(
+            product);
+
+        await dbContext.SaveChangesAsync();
+
+        try
         {
-            Id = id,
-            ProductUuid = productUuid,
-            Name = name,
-            Price = 120,
-            ProductCategoryId = category.Id,
-            ProductCategory = category,
-            DeleteFlg = deleteFlg,
-            ProductStock = new ProductStockEntity
+            // Act
+            var result =
+                await repository
+                    .SelectByProductCategoryIdAsync(
+                        category.CategoryUuid);
+
+            // Assert
+            Assert.IsFalse(
+                result.Any(
+                    item =>
+                        item.ProductUuid
+                        == productUuid));
+        }
+        finally
+        {
+            await DeleteProductAsync(
+                productUuid);
+        }
+    }
+
+    /// <summary>
+    /// 存在しないカテゴリUUIDの場合に空リストが返ることを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "存在しないカテゴリUUIDを指定した場合は空リストを返す")]
+    public async Task
+        SelectByProductCategoryIdAsync_WhenCategoryDoesNotExist_ShouldReturnEmptyList()
+    {
+        // Arrange
+        var nonexistentCategoryUuid =
+            Guid.NewGuid();
+
+        // Act
+        var result =
+            await repository
+                .SelectByProductCategoryIdAsync(
+                    nonexistentCategoryUuid);
+
+        // Assert
+        Assert.IsNotNull(
+            result);
+
+        Assert.IsEmpty(
+            result);
+    }
+
+    /// <summary>
+    /// DB接続エラーをInternalExceptionへ変換することを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "カテゴリ別商品取得時にDB接続エラーが発生した場合はInternalExceptionを送出する")]
+    public async Task
+        SelectByProductCategoryIdAsync_WhenDatabaseConnectionFails_ShouldThrowInternalException()
+    {
+        // Arrange
+        await using var errorContext =
+            CreateConnectionErrorContext();
+
+        var factory =
+            scope.ServiceProvider
+                .GetRequiredService<ProductFactory>();
+
+        var errorRepository =
+            new ProductRepository(
+                errorContext,
+                factory);
+
+        var categoryUuid =
+            Guid.NewGuid();
+
+        // Act
+        var exception =
+            await Assert
+                .ThrowsExactlyAsync<InternalException>(
+                    async () =>
+                    {
+                        await errorRepository
+                            .SelectByProductCategoryIdAsync(
+                                categoryUuid);
+                    });
+
+        // Assert
+        Assert.AreEqual(
+            $"商品カテゴリID:{categoryUuid}の商品取得中に予期しないエラーが発生しました。",
+            exception.Message);
+
+        Assert.IsNotNull(
+            exception.InnerException);
+    }
+
+    /*
+     * FindByIdAsync
+     */
+
+    /// <summary>
+    /// 存在する未削除商品をUUIDで取得できることを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "存在する商品UUIDを指定した場合は商品を取得できる")]
+    public async Task
+        FindByIdAsync_WhenActiveProductExists_ShouldReturnProduct()
+    {
+        // Arrange
+        var category =
+            await GetExistingCategoryAsync();
+
+        var productUuid =
+            Guid.NewGuid();
+
+        var product =
+            CreateProductEntity(
+                productUuid,
+                "商品ID検索確認商品",
+                category,
+                deleteFlg: 0);
+
+        dbContext.Products.Add(
+            product);
+
+        await dbContext.SaveChangesAsync();
+
+        try
+        {
+            // Act
+            var result =
+                await repository
+                    .FindByIdAsync(
+                        productUuid);
+
+            // Assert
+            Assert.IsNotNull(
+                result);
+
+            Assert.AreEqual(
+                productUuid,
+                result.ProductUuid);
+
+            Assert.AreEqual(
+                "商品ID検索確認商品",
+                result.Name);
+
+            Assert.AreEqual(
+                1_000,
+                result.Price);
+
+            Assert.AreEqual(
+                0,
+                result.DeleteFlg);
+
+            Assert.IsNotNull(
+                result.ProductCategory);
+
+            Assert.AreEqual(
+                category.CategoryUuid,
+                result.ProductCategory
+                    .CategoryUuid);
+
+            Assert.IsNotNull(
+                result.ProductStock);
+
+            Assert.AreEqual(
+                10,
+                result.ProductStock
+                    .Quantity);
+        }
+        finally
+        {
+            await DeleteProductAsync(
+                productUuid);
+        }
+    }
+
+    /// <summary>
+    /// 存在しない商品UUIDの場合にnullが返ることを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "存在しない商品UUIDを指定した場合はnullを返す")]
+    public async Task
+        FindByIdAsync_WhenProductDoesNotExist_ShouldReturnNull()
+    {
+        // Arrange
+        var nonexistentProductUuid =
+            Guid.NewGuid();
+
+        // Act
+        var result =
+            await repository
+                .FindByIdAsync(
+                    nonexistentProductUuid);
+
+        // Assert
+        Assert.IsNull(
+            result);
+    }
+
+    /// <summary>
+    /// 削除済み商品をUUIDで検索した場合にnullが返ることを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "削除済みの商品UUIDを指定した場合はnullを返す")]
+    public async Task
+        FindByIdAsync_WhenProductIsDeleted_ShouldReturnNull()
+    {
+        // Arrange
+        var category =
+            await GetExistingCategoryAsync();
+
+        var productUuid =
+            Guid.NewGuid();
+
+        var product =
+            CreateProductEntity(
+                productUuid,
+                "削除済みID検索確認商品",
+                category,
+                deleteFlg: 1);
+
+        dbContext.Products.Add(
+            product);
+
+        await dbContext.SaveChangesAsync();
+
+        try
+        {
+            // Act
+            var result =
+                await repository
+                    .FindByIdAsync(
+                        productUuid);
+
+            // Assert
+            Assert.IsNull(
+                result);
+        }
+        finally
+        {
+            await DeleteProductAsync(
+                productUuid);
+        }
+    }
+
+    /// <summary>
+    /// DB接続エラーをInternalExceptionへ変換することを確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "商品ID検索時にDB接続エラーが発生した場合はInternalExceptionを送出する")]
+    public async Task
+        FindByIdAsync_WhenDatabaseConnectionFails_ShouldThrowInternalException()
+    {
+        // Arrange
+        await using var errorContext =
+            CreateConnectionErrorContext();
+
+        var factory =
+            scope.ServiceProvider
+                .GetRequiredService<ProductFactory>();
+
+        var errorRepository =
+            new ProductRepository(
+                errorContext,
+                factory);
+
+        var productUuid =
+            Guid.NewGuid();
+
+        // Act
+        var exception =
+            await Assert
+                .ThrowsExactlyAsync<InternalException>(
+                    async () =>
+                    {
+                        await errorRepository
+                            .FindByIdAsync(
+                                productUuid);
+                    });
+
+        // Assert
+        Assert.AreEqual(
+            $"商品ID:{productUuid}の商品取得中に予期しないエラーが発生しました。",
+            exception.Message);
+
+        Assert.IsNotNull(
+            exception.InnerException);
+    }
+
+    /*
+     * 共通処理
+     */
+
+    /// <summary>
+    /// DB接続エラーを発生させるDbContextを生成する。
+    /// </summary>
+    private static AppDbContext
+        CreateConnectionErrorContext()
+    {
+        var options =
+            new DbContextOptionsBuilder<AppDbContext>()
+                .UseNpgsql(
+                    "Host=localhost;"
+                    + "Port=9999;"
+                    + "Database=A_exercise_EC_BE;"
+                    + "Username=postgres;"
+                    + "Password=postgres;"
+                    + "Timeout=1;"
+                    + "Command Timeout=1")
+                .Options;
+
+        return new AppDbContext(
+            options);
+    }
+
+    /// <summary>
+    /// テストDBに存在する商品カテゴリを1件取得する。
+    /// </summary>
+    private async Task<ProductCategoryEntity>
+        GetExistingCategoryAsync()
+    {
+        return await dbContext.ProductCategories
+            .AsNoTracking()
+            .OrderBy(
+                category =>
+                    category.Id)
+            .FirstAsync();
+    }
+
+    /// <summary>
+    /// 商品Entityを生成する。
+    /// </summary>
+    private static ProductEntity
+        CreateProductEntity(
+            Guid productUuid,
+            string productName,
+            ProductCategoryEntity category,
+            int deleteFlg)
+    {
+        var product =
+            new ProductEntity
             {
-                Id = id,
-                StockUuid = Guid.NewGuid(),
-                ProductId = id,
-                Quantity = quantity
-            }
-        };
+                ProductUuid =
+                    productUuid,
+
+                Name =
+                    productName,
+
+                Price =
+                    1_000,
+
+                ImageUrl =
+                    "https://example.com/product.png",
+
+                DeleteFlg =
+                    deleteFlg,
+
+                ProductCategoryId =
+                    category.Id,
+
+                ProductCategory =
+                    category
+            };
+
+        product.ProductStock =
+            new ProductStockEntity
+            {
+                StockUuid =
+                    Guid.NewGuid(),
+
+                Quantity =
+                    10,
+
+                Product =
+                    product
+            };
+
+        return product;
+    }
+
+    /// <summary>
+    /// テストで登録した商品を物理削除する。
+    /// </summary>
+    private async Task DeleteProductAsync(
+        Guid productUuid)
+    {
+        var product =
+            await dbContext.Products
+                .Include(
+                    entity =>
+                        entity.ProductStock)
+                .SingleOrDefaultAsync(
+                    entity =>
+                        entity.ProductUuid
+                        == productUuid);
+
+        if (product is null)
+        {
+            return;
+        }
+
+        if (product.ProductStock
+            is not null)
+        {
+            dbContext.ProductStocks.Remove(
+                product.ProductStock);
+        }
+
+        dbContext.Products.Remove(
+            product);
+
+        await dbContext.SaveChangesAsync();
+    }
 }
