@@ -1,16 +1,18 @@
 namespace A_exercise_EC_BE.Domain.Exceptions;
-
 /// <summary>
-/// アプリケーション内部の処理失敗を表す例外。
+/// 内部エラーを表す例外クラス
 /// </summary>
 public class InternalException : Exception
 {
-    public InternalException(string message) : base(message)
-    {
-    }
-
-    public InternalException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+    /// <summary>
+    /// エラーメッセージだけをもつ例外クラス
+    /// </summary>
+    /// <param name="message">例外メッセージ</param>
+    public InternalException(string message) : base(message) { }
+    /// <summary>
+    /// エラーメッセージ + 元の例外（原因）も一緒に持つ例外
+    /// </summary>
+    /// <param name="message">例外メッセージ</param>
+    /// <param name="innerException">元の例外</param>
+    public InternalException(string message, Exception innerException) : base(message, innerException) { }
 }
