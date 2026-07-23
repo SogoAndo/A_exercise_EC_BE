@@ -8,12 +8,28 @@ namespace A_exercise_EC_BE.Infrastructure.Contexts;
 /// </summary>
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
+    public DbSet<CustomerEntity> Customers => Set<CustomerEntity>();
     public DbSet<ProductCategoryEntity> ProductCategories => Set<ProductCategoryEntity>();
     public DbSet<ProductEntity> Products => Set<ProductEntity>();
     public DbSet<ProductStockEntity> ProductStocks => Set<ProductStockEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<CustomerEntity>(entity =>
+        {
+            entity.HasIndex(customer => customer.CustomerUuid).IsUnique();
+            entity.HasIndex(customer => customer.MailAddress).IsUnique();
+            entity.HasIndex(customer => customer.Username).IsUnique();
+            entity.Property(customer => customer.Name).HasMaxLength(20).IsRequired();
+            entity.Property(customer => customer.Kana).HasMaxLength(20);
+            entity.Property(customer => customer.Address1).HasMaxLength(100).IsRequired();
+            entity.Property(customer => customer.Address2).HasMaxLength(100);
+            entity.Property(customer => customer.PhoneNumber).HasMaxLength(20).IsRequired();
+            entity.Property(customer => customer.MailAddress).HasMaxLength(200).IsRequired();
+            entity.Property(customer => customer.Username).HasMaxLength(30).IsRequired();
+            entity.Property(customer => customer.PasswordHash).HasMaxLength(255).IsRequired();
+        });
+
         modelBuilder.Entity<ProductCategoryEntity>(entity =>
         {
             entity.HasIndex(category => category.CategoryUuid).IsUnique();

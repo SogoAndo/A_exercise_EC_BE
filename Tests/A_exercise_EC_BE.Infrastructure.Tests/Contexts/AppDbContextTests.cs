@@ -30,6 +30,24 @@ public class AppDbContextTests
             index => index.Properties.Single().Name == nameof(ProductEntity.ProductUuid)).IsUnique);
     }
 
+    [TestMethod]
+    public void Model_MatchesSharedCustomerTable()
+    {
+        using var context = CreateContext();
+        var customer = context.Model.FindEntityType(typeof(CustomerEntity));
+
+        Assert.IsNotNull(customer);
+        Assert.AreEqual("customer", customer.GetTableName());
+        Assert.AreEqual(20, customer.FindProperty(nameof(CustomerEntity.Name))?.GetMaxLength());
+        Assert.AreEqual(20, customer.FindProperty(nameof(CustomerEntity.Kana))?.GetMaxLength());
+        Assert.IsTrue(customer.FindProperty(nameof(CustomerEntity.Kana))?.IsNullable);
+        Assert.AreEqual(200, customer.FindProperty(nameof(CustomerEntity.MailAddress))?.GetMaxLength());
+        Assert.AreEqual("password", customer.FindProperty(nameof(CustomerEntity.PasswordHash))
+            ?.GetColumnName(StoreObjectIdentifier.Table("customer")));
+        Assert.IsTrue(customer.GetIndexes().Single(index =>
+            index.Properties.Single().Name == nameof(CustomerEntity.MailAddress)).IsUnique);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
