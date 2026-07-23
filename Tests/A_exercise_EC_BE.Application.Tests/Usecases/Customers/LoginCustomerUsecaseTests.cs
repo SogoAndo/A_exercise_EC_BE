@@ -53,6 +53,29 @@ public class LoginCustomerUsecaseTests
     }
 
     [TestMethod]
+    [DataRow("12345")]
+    [DataRow("12345678901234567890")]
+    public async Task LoginAsync_WithPasswordAtValidBoundary_ReturnsCustomer(
+        string password)
+    {
+        var customer = CreateCustomer();
+        var request = new CustomerLoginRequest(customer.MailAddress, password);
+        _repositoryMock
+            .Setup(repository => repository.FindByMailAddressAsync(request.MailAddress))
+            .ReturnsAsync(customer);
+        _passwordVerifierMock
+            .Setup(verifier => verifier.Verify(customer.Password, password))
+            .Returns(true);
+
+        var result = await _usecase.LoginAsync(request);
+
+        Assert.AreEqual(customer.CustomerUuid, result.CustomerUuid);
+        _passwordVerifierMock.Verify(
+            verifier => verifier.Verify(customer.Password, password),
+            Times.Once);
+    }
+
+    [TestMethod]
     public async Task LoginAsync_WithNullRequest_ThrowsDomainException()
     {
         await Assert.ThrowsExactlyAsync<DomainException>(
