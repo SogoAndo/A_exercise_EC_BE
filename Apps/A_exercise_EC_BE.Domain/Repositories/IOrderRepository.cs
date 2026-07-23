@@ -17,4 +17,21 @@ public interface IOrderRepository
     Task CreateAsync(
         Orders order
     );
+
+    Task<List<Orders>>
+       FindByCustomerUuidAsync(
+           Guid customerUuid
+       );
+
+    /// <summary>
+    /// 注文UUIDを指定して注文詳細を取得する。
+    /// </summary>
+    /// <param name="orderUuid">注文UUID</param>
+    /// <returns>
+    /// 注文詳細。
+    /// 対象の注文が存在しない場合はnull。
+    /// </returns>
+    Task<Orders?> FindByOrderUuidAsync(
+        Guid orderUuid
+    );
 }
