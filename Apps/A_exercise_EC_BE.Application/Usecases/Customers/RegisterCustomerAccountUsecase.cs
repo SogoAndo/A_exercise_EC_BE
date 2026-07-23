@@ -3,7 +3,7 @@ using A_exercise_EC_BE.Domain.Exceptions;
 using A_exercise_EC_BE.Domain.Models;
 using A_exercise_EC_BE.Domain.Repositories;
 
-namespace A_exercise_EC_BE.Application.Usecases.Accounts;
+namespace A_exercise_EC_BE.Application.Usecases.Customers;
 
 /// <summary>
 /// 顧客アカウント登録ユースケース

@@ -9,6 +9,7 @@ using A_exercise_EC_BE.Domain.Models;
 using A_exercise_EC_BE.Infrastructure.Shared;
 using A_exercise_EC_BE.Application.Security;
 using A_exercise_EC_BE.Application.Usecases;
+using A_exercise_EC_BE.Application.Usecases.Customers;
 
 namespace A_exercise_EC_BE.Presentations.Configs;
 /// <summary>
@@ -79,6 +80,7 @@ public static class ApplicationDependencyExtensions
     private static IServiceCollection AddApplicationLayerDependencies(
     this IServiceCollection services, IConfiguration config)
     {
+        services.AddScoped<IRegisterCustomerAccountUsecase, RegisterCustomerAccountUsecase>();
         return services;
     }
 

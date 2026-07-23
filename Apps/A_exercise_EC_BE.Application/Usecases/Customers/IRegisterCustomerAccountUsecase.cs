@@ -1,6 +1,6 @@
 using A_exercise_EC_BE.Domain.Models;
 
-namespace A_exercise_EC_BE.Application.Usecases.Accounts;
+namespace A_exercise_EC_BE.Application.Usecases.Customers;
 
 /// <summary>
 /// 顧客アカウント登録ユースケースのインターフェース
