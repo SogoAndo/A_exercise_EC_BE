@@ -1,24 +1,22 @@
 using A_exercise_EC_BE.Applications.Security;
 using A_exercise_EC_BE.Domains.Exceptions;
-using Microsoft.AspNetCore.Identity;
 
 namespace A_exercise_EC_BE.Infrastructures.Security;
 
 /// <summary>
-/// ASP.NET Core Identity V3形式のPBKDF2ハッシュで顧客パスワードを検証する。
+/// 顧客アカウント登録と同じPBKDF2形式で顧客パスワードを検証する。
 /// </summary>
 public sealed class PBKDF2CustomerPasswordVerifier : ICustomerPasswordVerifier
 {
-    private readonly IPasswordHasher<CustomerPasswordContext> _passwordHasher;
+    private readonly IPasswordHashingService _passwordHashingService;
     private readonly string _dummyPasswordHash;
 
     public PBKDF2CustomerPasswordVerifier(
-        IPasswordHasher<CustomerPasswordContext> passwordHasher)
+        IPasswordHashingService passwordHashingService)
     {
-        _passwordHasher = passwordHasher
-            ?? throw new ArgumentNullException(nameof(passwordHasher));
-        _dummyPasswordHash = _passwordHasher.HashPassword(
-            new CustomerPasswordContext(),
+        _passwordHashingService = passwordHashingService
+            ?? throw new ArgumentNullException(nameof(passwordHashingService));
+        _dummyPasswordHash = _passwordHashingService.Hash(
             Guid.NewGuid().ToString("N"));
     }
 
@@ -34,26 +32,13 @@ public sealed class PBKDF2CustomerPasswordVerifier : ICustomerPasswordVerifier
             throw new DomainException("パスワードは必須です。");
         }
 
-        PasswordVerificationResult result;
-        try
-        {
-            result = _passwordHasher.VerifyHashedPassword(
-                new CustomerPasswordContext(),
-                passwordHash ?? _dummyPasswordHash,
-                providedPassword);
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
-
-        return result is PasswordVerificationResult.Success
-            or PasswordVerificationResult.SuccessRehashNeeded;
+        return _passwordHashingService.Verify(
+            providedPassword,
+            passwordHash ?? _dummyPasswordHash);
     }
 }
 
 /// <summary>
-/// 顧客パスワード検証時にPasswordHasherへ渡すコンテキスト。
-/// PasswordHasherは現在この値を参照しない。
+/// 既存のDI登録との互換性を維持するためのコンテキスト。
 /// </summary>
 public sealed class CustomerPasswordContext;

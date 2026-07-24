@@ -1,6 +1,6 @@
+using A_exercise_EC_BE.Applications.Security;
 using A_exercise_EC_BE.Domains.Exceptions;
 using A_exercise_EC_BE.Infrastructures.Security;
-using Microsoft.AspNetCore.Identity;
 using Moq;
 
 namespace A_exercise_EC_BE.Infrastructures.Tests.Security;
@@ -10,12 +10,12 @@ namespace A_exercise_EC_BE.Infrastructures.Tests.Security;
 public class PBKDF2CustomerPasswordVerifierTests
 {
     [TestMethod]
-    public void Verify_WithMatchingIdentityV3Hash_ReturnsTrue()
+    public void Verify_WithHashCreatedAtCustomerRegistration_ReturnsTrue()
     {
-        var passwordHasher = new PasswordHasher<CustomerPasswordContext>();
-        var context = new CustomerPasswordContext();
-        var hash = passwordHasher.HashPassword(context, "Password123");
-        var verifier = new PBKDF2CustomerPasswordVerifier(passwordHasher);
+        var passwordHashingService = new PasswordHashingService();
+        var hash = passwordHashingService.Hash("Password123");
+        var verifier = new PBKDF2CustomerPasswordVerifier(
+            passwordHashingService);
 
         var result = verifier.Verify(hash, "Password123");
 
@@ -25,10 +25,10 @@ public class PBKDF2CustomerPasswordVerifierTests
     [TestMethod]
     public void Verify_WithIncorrectPassword_ReturnsFalse()
     {
-        var passwordHasher = new PasswordHasher<CustomerPasswordContext>();
-        var context = new CustomerPasswordContext();
-        var hash = passwordHasher.HashPassword(context, "Password123");
-        var verifier = new PBKDF2CustomerPasswordVerifier(passwordHasher);
+        var passwordHashingService = new PasswordHashingService();
+        var hash = passwordHashingService.Hash("Password123");
+        var verifier = new PBKDF2CustomerPasswordVerifier(
+            passwordHashingService);
 
         var result = verifier.Verify(hash, "WrongPassword");
 
@@ -39,7 +39,7 @@ public class PBKDF2CustomerPasswordVerifierTests
     public void Verify_WithMalformedHash_ReturnsFalse()
     {
         var verifier = new PBKDF2CustomerPasswordVerifier(
-            new PasswordHasher<CustomerPasswordContext>());
+            new PasswordHashingService());
 
         var result = verifier.Verify("not-a-password-hash", "Password123");
 
@@ -49,12 +49,18 @@ public class PBKDF2CustomerPasswordVerifierTests
     [TestMethod]
     public void Verify_WithoutCustomer_PerformsDummyHashVerificationAndReturnsFalse()
     {
-        var passwordHasher = new PasswordHasher<CustomerPasswordContext>();
-        var verifier = new PBKDF2CustomerPasswordVerifier(passwordHasher);
+        var passwordHashingServiceMock = CreatePasswordHashingServiceMock();
+        var verifier = new PBKDF2CustomerPasswordVerifier(
+            passwordHashingServiceMock.Object);
 
         var result = verifier.Verify(null, "Password123");
 
         Assert.IsFalse(result);
+        passwordHashingServiceMock.Verify(
+            service => service.Verify(
+                "Password123",
+                "dummy-password-hash"),
+            Times.Once);
     }
 
     [TestMethod]
@@ -62,19 +68,14 @@ public class PBKDF2CustomerPasswordVerifierTests
     [DataRow("   ")]
     public void Verify_WithoutPasswordHash_ThrowsDomainException(string passwordHash)
     {
-        var passwordHasherMock = new Mock<IPasswordHasher<CustomerPasswordContext>>();
-        passwordHasherMock
-            .Setup(hasher => hasher.HashPassword(
-                It.IsAny<CustomerPasswordContext>(),
-                It.IsAny<string>()))
-            .Returns("dummy-password-hash");
-        var verifier = new PBKDF2CustomerPasswordVerifier(passwordHasherMock.Object);
+        var passwordHashingServiceMock = CreatePasswordHashingServiceMock();
+        var verifier = new PBKDF2CustomerPasswordVerifier(
+            passwordHashingServiceMock.Object);
 
         Assert.ThrowsExactly<DomainException>(
             () => verifier.Verify(passwordHash, "Password123"));
-        passwordHasherMock.Verify(
-            hasher => hasher.VerifyHashedPassword(
-                It.IsAny<CustomerPasswordContext>(),
+        passwordHashingServiceMock.Verify(
+            service => service.Verify(
                 It.IsAny<string>(),
                 It.IsAny<string>()),
             Times.Never);
@@ -86,43 +87,28 @@ public class PBKDF2CustomerPasswordVerifierTests
     public void Verify_WithoutProvidedPassword_ThrowsDomainException(
         string providedPassword)
     {
-        var passwordHasherMock = new Mock<IPasswordHasher<CustomerPasswordContext>>();
-        passwordHasherMock
-            .Setup(hasher => hasher.HashPassword(
-                It.IsAny<CustomerPasswordContext>(),
-                It.IsAny<string>()))
-            .Returns("dummy-password-hash");
-        var verifier = new PBKDF2CustomerPasswordVerifier(passwordHasherMock.Object);
+        var passwordHashingServiceMock = CreatePasswordHashingServiceMock();
+        var verifier = new PBKDF2CustomerPasswordVerifier(
+            passwordHashingServiceMock.Object);
 
         Assert.ThrowsExactly<DomainException>(
             () => verifier.Verify("password-hash", providedPassword));
-        passwordHasherMock.Verify(
-            hasher => hasher.VerifyHashedPassword(
-                It.IsAny<CustomerPasswordContext>(),
+        passwordHashingServiceMock.Verify(
+            service => service.Verify(
                 It.IsAny<string>(),
                 It.IsAny<string>()),
             Times.Never);
     }
 
-    [TestMethod]
-    public void Verify_WhenRehashIsNeeded_ReturnsTrue()
+    private static Mock<IPasswordHashingService>
+        CreatePasswordHashingServiceMock()
     {
-        var passwordHasherMock = new Mock<IPasswordHasher<CustomerPasswordContext>>();
-        passwordHasherMock
-            .Setup(hasher => hasher.HashPassword(
-                It.IsAny<CustomerPasswordContext>(),
+        var passwordHashingServiceMock =
+            new Mock<IPasswordHashingService>();
+        passwordHashingServiceMock
+            .Setup(service => service.Hash(
                 It.IsAny<string>()))
             .Returns("dummy-password-hash");
-        passwordHasherMock
-            .Setup(hasher => hasher.VerifyHashedPassword(
-                It.IsAny<CustomerPasswordContext>(),
-                "old-password-hash",
-                "Password123"))
-            .Returns(PasswordVerificationResult.SuccessRehashNeeded);
-        var verifier = new PBKDF2CustomerPasswordVerifier(passwordHasherMock.Object);
-
-        var result = verifier.Verify("old-password-hash", "Password123");
-
-        Assert.IsTrue(result);
+        return passwordHashingServiceMock;
     }
 }
