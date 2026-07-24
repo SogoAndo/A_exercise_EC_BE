@@ -711,4 +711,100 @@ public class OrderRepositoryTests
 
         await dbContext.SaveChangesAsync();
     }
+
+    /// <summary>
+    /// DBに存在しない顧客UUIDを指定した場合の例外を確認する。
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "DBに存在しない顧客UUIDを指定した場合はInternalExceptionが発生する")]
+    public async Task
+        CreateAsync_WhenCustomerDoesNotExist_ShouldThrowInternalException()
+    {
+        // Arrange
+        var nonexistentCustomerUuid =
+            Guid.NewGuid();
+
+        /*
+         * DBには登録しない顧客ドメインを生成する。
+         * Customerのバリデーションを通すため、
+         * UUID以外の必須項目も正しい値を指定する。
+         */
+        var nonexistentCustomer =
+            new Customer(
+                nonexistentCustomerUuid,
+                "存在しない顧客",
+                "ソンザイシナイコキャク",
+                "東京都新宿区1-1-1",
+                null,
+                "09012345678",
+                $"notfound-{Guid.NewGuid():N}@example.com",
+                $"user{Guid.NewGuid():N}"[..20],
+                "test-password",
+                DateTime.Now.AddMinutes(-1));
+
+        /*
+         * 注文ステータスと支払い方法は
+         * DBに存在するものを利用する。
+         */
+        var orderStatusEntity =
+            await dbContext.OrderStatuses
+                .AsNoTracking()
+                .OrderBy(
+                    status =>
+                        status.Id)
+                .FirstAsync();
+
+        var paymentMethodEntity =
+            await dbContext.PaymentMethods
+                .AsNoTracking()
+                .OrderBy(
+                    method =>
+                        method.Id)
+                .FirstAsync();
+
+        var orderStatusAdapter =
+            scope!.ServiceProvider
+                .GetRequiredService<
+                    OrderStatusEntityAdapter>();
+
+        var paymentMethodAdapter =
+            scope.ServiceProvider
+                .GetRequiredService<
+                    PaymentMethodEntityAdapter>();
+
+        var orderStatus =
+            await orderStatusAdapter.RestoreAsync(
+                orderStatusEntity);
+
+        var paymentMethod =
+            await paymentMethodAdapter.RestoreAsync(
+                paymentMethodEntity);
+
+        var order =
+            new Orders(
+                Guid.NewGuid(),
+                DateTime.Now.AddMinutes(-1),
+                1_000,
+                nonexistentCustomer,
+                orderStatus,
+                paymentMethod,
+                new List<OrdersDetail>());
+
+        // Act
+        var exception =
+            await Assert
+                .ThrowsExactlyAsync<InternalException>(
+                    async () =>
+                    {
+                        await repository.CreateAsync(
+                            order);
+                    });
+
+        // Assert
+        Assert.AreEqual(
+            $"顧客UUID:{nonexistentCustomerUuid}"
+            + "の顧客が存在しません。",
+            exception.Message);
+    }
 }

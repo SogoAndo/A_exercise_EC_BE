@@ -191,10 +191,6 @@ public class OrderRepository : IOrderRepository
                 entity
             );
         }
-        catch (InternalException)
-        {
-            throw;
-        }
         catch (Exception ex)
         {
             throw new InternalException(
