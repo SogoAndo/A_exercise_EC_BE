@@ -9,7 +9,8 @@ namespace A_exercise_EC_BE.Presentations.Controllers;
 /// UC002 顧客ログインAPI。
 /// </summary>
 [ApiController]
-[Route("api/ec/auth")]
+[Route("/")]
+[Tags("UC002: 顧客ログイン")]
 public sealed class LoginCustomerController(
     ILoginCustomerUsecase loginCustomerUsecase,
     ICustomerAccessTokenIssuer customerAccessTokenIssuer)
