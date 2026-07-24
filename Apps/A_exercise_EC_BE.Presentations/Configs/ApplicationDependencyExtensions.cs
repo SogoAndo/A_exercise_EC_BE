@@ -15,6 +15,7 @@ using A_exercise_EC_BE.Infrastructures.Shared;
 using A_exercise_EC_BE.Applications.Security;
 using A_exercise_EC_BE.Applications.Usecases;
 using A_exercise_EC_BE.Applications.Usecases.Customers;
+using A_exercise_EC_BE.Applications.Usecases.Accounts;
 using A_exercise_EC_BE.Presentations.Adapters;
 using A_exercise_EC_BE.Presentations.Authentication;
 
