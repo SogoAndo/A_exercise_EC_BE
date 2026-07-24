@@ -9,7 +9,8 @@ namespace A_exercise_EC_BE.Presentations.Controllers;
 /// 顧客アカウント登録API
 /// </summary>
 [ApiController]
-[Route("api/customer/accounts")]
+[Route("account")]
+[Tags("UC001: 顧客アカウント登録")]
 public class RegisterCustomerAccountController
     : ControllerBase
 {
