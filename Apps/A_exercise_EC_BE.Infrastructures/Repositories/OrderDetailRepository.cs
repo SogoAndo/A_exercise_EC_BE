@@ -44,7 +44,7 @@ public class OrderDetailRepository
 
     public async Task CreateRangeAsync(
     int orderId,
-    IReadOnlyCollection<OrdersDetail> orderDetails)
+    List<OrdersDetail> orderDetails)
     {
         try
         {
@@ -90,15 +90,14 @@ public class OrderDetailRepository
                 entity.ProductId =
                     productEntity.Id;
 
-                entities.Add(
-                    entity);
+                await _context.OrdersDetails.AddAsync(entity);
             }
 
-            await _context.OrdersDetails
-                .AddRangeAsync(
-                    entities);
-
             await _context.SaveChangesAsync();
+        }
+        catch (InternalException)
+        {
+            throw;
         }
         catch (Exception ex)
         {

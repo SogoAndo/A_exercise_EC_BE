@@ -46,10 +46,7 @@ public class OrderDetailRepositoryTests
     /// <summary>
     /// 本物の注文明細Adapter。
     /// </summary>
-    private IConverter<
-        OrdersDetail,
-        OrdersDetailEntity
-    > adapter = null!;
+    private OrdersDetailEntityAdapter adapter = null!;
 
     /// <summary>
     /// 商品Entityをドメインモデルへ復元するFactory。
@@ -116,18 +113,13 @@ public class OrderDetailRepositoryTests
             scope.ServiceProvider
                 .GetRequiredService<AppDbContext>();
 
-        adapter =
-            scope.ServiceProvider
-                .GetRequiredService<
-                    IConverter<
-                        OrdersDetail,
-                        OrdersDetailEntity
-                    >
-                >();
-
         productFactory =
             scope.ServiceProvider
                 .GetRequiredService<ProductFactory>();
+
+        adapter =
+            scope.ServiceProvider
+                .GetRequiredService<OrdersDetailEntityAdapter>();
 
         repository =
             new OrderDetailRepository(
@@ -162,8 +154,12 @@ public class OrderDetailRepositoryTests
         var order =
             await GetExistingOrderAsync();
 
+        var productEntity =
+            await GetExistingProductEntityAsync();
+
         var product =
-            await GetExistingProductAsync();
+            await productFactory.RestoreAsync(
+                productEntity);
 
         var firstCount =
             CreateUniqueCount();
@@ -181,13 +177,12 @@ public class OrderDetailRepositoryTests
                 product,
                 secondCount);
 
-        IReadOnlyCollection<OrdersDetail>
-            orderDetails =
-                new List<OrdersDetail>
-                {
-                    firstOrderDetail,
-                    secondOrderDetail
-                };
+        List<OrdersDetail> orderDetails =
+        new()
+        {
+            firstOrderDetail,
+            secondOrderDetail
+        };
 
         /*
          * 実行前に存在している明細IDを保存する。
@@ -245,10 +240,7 @@ public class OrderDetailRepositoryTests
                 createdEntities.All(
                     detail =>
                         detail.ProductId
-                        == product.ProductUuid
-                            .Equals(Guid.Empty)
-                            ? false
-                            : true));
+                        == productEntity.Id));
 
             CollectionAssert.AreEquivalent(
                 new[]
@@ -313,7 +305,7 @@ public class OrderDetailRepositoryTests
             // Act
             await repository.CreateRangeAsync(
                 order.Id,
-                new[]
+                new List<OrdersDetail>
                 {
                     orderDetail
                 });
@@ -363,7 +355,7 @@ public class OrderDetailRepositoryTests
         CreateRangeAsync_WhenOrderDetailsAreNull_ShouldThrowInternalException()
     {
         // Arrange
-        IReadOnlyCollection<OrdersDetail>
+        List<OrdersDetail>
             orderDetails = null!;
 
         // Act
@@ -393,10 +385,7 @@ public class OrderDetailRepositoryTests
     public async Task
         CreateRangeAsync_WhenOrderDetailsAreEmpty_ShouldThrowInternalException()
     {
-        // Arrange
-        IReadOnlyCollection<OrdersDetail>
-            orderDetails =
-                Array.Empty<OrdersDetail>();
+        List<OrdersDetail> orderDetails = new();
 
         // Act
         var exception =
@@ -432,14 +421,16 @@ public class OrderDetailRepositoryTests
         var nonexistentProductUuid =
             Guid.NewGuid();
 
+        var category = new ProductCategory(Guid.Parse("10000000-0000-0000-0000-000000000001"), "筆記具");
+        var stock = new ProductStock(3);
         var nonexistentProduct =
             new Product(
                 nonexistentProductUuid,
-                "存在しない商品",
+                "DB接続エラー確認商品",
                 100,
-                "https://example.com/not-found.png",
-                null,
-                null,
+                "https://example.com/error.png",
+                category,
+                stock,
                 0);
 
         var orderDetail =
@@ -456,7 +447,7 @@ public class OrderDetailRepositoryTests
                         await repository
                             .CreateRangeAsync(
                                 order.Id,
-                                new[]
+                                new List<OrdersDetail>
                                 {
                                     orderDetail
                                 });
@@ -506,7 +497,7 @@ public class OrderDetailRepositoryTests
                         await repository
                             .CreateRangeAsync(
                                 nonexistentOrderId,
-                                new[]
+                                new List<OrdersDetail>
                                 {
                                     orderDetail
                                 });
@@ -560,14 +551,17 @@ public class OrderDetailRepositoryTests
          * 商品検索の時点でDB接続エラーになるため、
          * DBに存在しないProductでも構わない。
          */
+
+        var category = new ProductCategory(Guid.Parse("10000000-0000-0000-0000-000000000001"), "筆記具");
+        var stock = new ProductStock(3);
         var product =
             new Product(
                 Guid.NewGuid(),
                 "DB接続エラー確認商品",
                 100,
                 "https://example.com/error.png",
-                null,
-                null,
+                category,
+                stock,
                 0);
 
         var orderDetail =
@@ -584,7 +578,7 @@ public class OrderDetailRepositoryTests
                         await errorRepository
                             .CreateRangeAsync(
                                 1,
-                                new[]
+                                new List<OrdersDetail>
                                 {
                                     orderDetail
                                 });

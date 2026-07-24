@@ -118,7 +118,7 @@ public class CustomerRepositoryTests
             Guid.NewGuid();
 
         var mailAddress =
-            $"find-{customerUuid:N}@example.com";
+            $"find@example.com";
 
         var username =
             $"find";
@@ -291,7 +291,7 @@ public class CustomerRepositoryTests
     {
         // Arrange
         var username =
-            $"not-exist-{Guid.NewGuid():N}";
+            $"not-exist";
 
         // Act
         var result =
@@ -367,7 +367,7 @@ public class CustomerRepositoryTests
             $"exists-mail";
 
         var mailAddress =
-            $"exists-mail-{customerUuid:N}@example.com";
+            $"exists-mail@example.com";
 
         var entity =
             CreateCustomerEntity(
@@ -483,10 +483,10 @@ public class CustomerRepositoryTests
             Guid.NewGuid();
 
         var username =
-            $"create-{customerUuid:N}";
+            $"create";
 
         var mailAddress =
-            $"create-{customerUuid:N}@example.com";
+            $"create@example.com";
 
         var customer =
             CreateCustomer(
@@ -565,7 +565,7 @@ public class CustomerRepositoryTests
         var customer =
             CreateCustomer(
                 customerUuid,
-                $"db-error-{customerUuid:N}",
+                $"db-error",
                 $"db-error-{customerUuid:N}@example.com");
 
         // Act & Assert
@@ -582,33 +582,44 @@ public class CustomerRepositoryTests
      */
 
     /// <summary>
-    /// CustomerEntityを生成する。
+    /// テスト用のCustomerEntityを生成する。
     /// </summary>
-    private static CustomerEntity
-        CreateCustomerEntity(
-            Guid customerUuid,
-            string username,
-            string mailAddress)
+    private static CustomerEntity CreateCustomerEntity(
+        Guid customerUuid,
+        string username,
+        string mailAddress)
     {
         return new CustomerEntity
         {
             CustomerUuid =
                 customerUuid,
 
-            Username =
-                username,
-
-            MailAddress =
-                mailAddress,
-
-            Password =
-                "test-password-hash",
-
             Name =
                 "テスト顧客",
 
             Kana =
-                "テストコキャク"
+                "テストコキャク",
+
+            Address1 =
+                "東京都新宿区1-1-1",
+
+            Address2 =
+                "テストマンション101",
+
+            PhoneNumber =
+                "09012345678",
+
+            MailAddress =
+                mailAddress,
+
+            Username =
+                username,
+
+            Password =
+                "test-password-hash",
+
+            CreatedAt =
+                DateTime.Now.AddMinutes(-1)
         };
     }
 
