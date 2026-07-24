@@ -53,10 +53,10 @@ public class ProductRepositoryTests
         var config = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile(
-                "appsettings.Test.json",
+                "appsettings.json",
                 optional: false)
             .AddJsonFile(
-                "appsettings.Test.local.json",
+                "appsettings.json",
                 optional: true)
             .AddEnvironmentVariables()
             .Build();
@@ -237,32 +237,6 @@ public class ProductRepositoryTests
             await DeleteProductAsync(
                 productUuid);
         }
-    }
-
-    /// <summary>
-    /// 商品が存在しない場合に空リストが返ることを確認する。
-    ///
-    /// 共用テストDBの全商品を削除するのは危険なので、
-    /// このテストは専用の空DBを使用できる場合のみ追加してください。
-    /// </summary>
-    [TestMethod(
-        DisplayName =
-            "未削除の商品が存在しない場合は空リストを返す")]
-    [Ignore(
-        "空の専用テストDBを用意できる場合に有効化してください。")]
-    public async Task
-        FindAllAsync_WhenActiveProductsDoNotExist_ShouldReturnEmptyList()
-    {
-        // Act
-        var result =
-            await repository.FindAllAsync();
-
-        // Assert
-        Assert.IsNotNull(
-            result);
-
-        Assert.IsEmpty(
-            result);
     }
 
     /// <summary>
@@ -796,8 +770,6 @@ public class ProductRepositoryTests
                 ProductCategoryId =
                     category.Id,
 
-                ProductCategory =
-                    category
             };
 
         product.ProductStock =
@@ -848,5 +820,113 @@ public class ProductRepositoryTests
             product);
 
         await dbContext.SaveChangesAsync();
+    }
+
+    [TestMethod(
+    DisplayName =
+        "FindAllAsyncでDB接続エラー時にInternalExceptionが発生する")]
+    public async Task
+    FindAllAsync_WhenDatabaseConnectionError_ShouldThrowInternalException()
+    {
+        var options =
+            new DbContextOptionsBuilder<AppDbContext>()
+                .UseNpgsql(
+                    "Host=localhost;"
+                    + "Port=9999;"
+                    + "Database=All_Exercise;"
+                    + "Username=postgres;"
+                    + "Password=postgres")
+                .Options;
+
+        await using var context =
+            new AppDbContext(options);
+
+        var factory =
+            scope.ServiceProvider
+                .GetRequiredService<ProductFactory>();
+
+        var repository =
+            new ProductRepository(
+                context,
+                factory);
+
+        await Assert.ThrowsExactlyAsync<InternalException>(
+            async () =>
+            {
+                await repository.FindAllAsync();
+            });
+    }
+
+    [TestMethod(
+    DisplayName =
+        "SelectByProductCategoryIdAsyncでDB接続エラー時にInternalExceptionが発生する")]
+    public async Task
+    SelectByProductCategoryIdAsync_WhenDatabaseConnectionError_ShouldThrowInternalException()
+    {
+        var options =
+            new DbContextOptionsBuilder<AppDbContext>()
+                .UseNpgsql(
+                    "Host=localhost;"
+                    + "Port=9999;"
+                    + "Database=All_Exercise;"
+                    + "Username=postgres;"
+                    + "Password=postgres")
+                .Options;
+
+        await using var context =
+            new AppDbContext(options);
+
+        var factory =
+            scope.ServiceProvider
+                .GetRequiredService<ProductFactory>();
+
+        var repository =
+            new ProductRepository(
+                context,
+                factory);
+
+        await Assert.ThrowsExactlyAsync<InternalException>(
+            async () =>
+            {
+                await repository
+                    .SelectByProductCategoryIdAsync(
+                        Guid.NewGuid());
+            });
+    }
+
+    [TestMethod(
+    DisplayName =
+        "FindByIdAsyncでDB接続エラー時にInternalExceptionが発生する")]
+    public async Task
+    FindByIdAsync_WhenDatabaseConnectionError_ShouldThrowInternalException()
+    {
+        var options =
+            new DbContextOptionsBuilder<AppDbContext>()
+                .UseNpgsql(
+                    "Host=localhost;"
+                    + "Port=9999;"
+                    + "Database=All_Exercise;"
+                    + "Username=postgres;"
+                    + "Password=postgres")
+                .Options;
+
+        await using var context =
+            new AppDbContext(options);
+
+        var factory =
+            scope.ServiceProvider
+                .GetRequiredService<ProductFactory>();
+
+        var repository =
+            new ProductRepository(
+                context,
+                factory);
+
+        await Assert.ThrowsExactlyAsync<InternalException>(
+            async () =>
+            {
+                await repository.FindByIdAsync(
+                    Guid.NewGuid());
+            });
     }
 }
