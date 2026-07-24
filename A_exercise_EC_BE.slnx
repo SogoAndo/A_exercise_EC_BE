@@ -1,9 +1,9 @@
 <Solution>
   <Folder Name="/Apps/">
-    <Project Path="Apps/A_exercise_EC_BE.Presentation/A_exercise_EC_BE.Presentation.csproj" />
+    <Project Path="Apps/A_exercise_EC_BE.Infrastructures/A_exercise_EC_BE.Infrastructure.csproj" />
     <Project Path="Apps/A_exercise_EC_BE.Applications/A_exercise_EC_BE.Application.csproj" />
-    <Project Path="Apps/A_exercise_EC_BE.Domain/A_exercise_EC_BE.Domain.csproj" />
-    <Project Path="Apps/A_exercise_EC_BE.Infrastructure/A_exercise_EC_BE.Infrastructure.csproj" />
+    <Project Path="Apps/A_exercise_EC_BE.Domains/A_exercise_EC_BE.Domain.csproj" />
+    <Project Path="Apps/A_exercise_EC_BE.Presentations/A_exercise_EC_BE.Presentation.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/A_exercise_EC_BE.Presentation.Tests/A_exercise_EC_BE.Presentation.Tests.csproj" />

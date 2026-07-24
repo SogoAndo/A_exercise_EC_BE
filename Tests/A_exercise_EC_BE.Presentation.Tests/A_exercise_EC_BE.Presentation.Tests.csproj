@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Apps\A_exercise_EC_BE.Presentation\A_exercise_EC_BE.Presentation.csproj" />
+    <ProjectReference Include="..\..\Apps\A_exercise_EC_BE.Presentations\A_exercise_EC_BE.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

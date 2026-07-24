@@ -13,9 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\A_exercise_EC_BE.Domain\A_exercise_EC_BE.Domain.csproj" />
+    <ProjectReference Include="..\A_exercise_EC_BE.Domains\A_exercise_EC_BE.Domain.csproj" />
     <ProjectReference Include="..\A_exercise_EC_BE.Applications\A_exercise_EC_BE.Application.csproj" />
-    <ProjectReference Include="..\A_exercise_EC_BE.Infrastructure\A_exercise_EC_BE.Infrastructure.csproj" />
+    <ProjectReference Include="..\A_exercise_EC_BE.Infrastructures\A_exercise_EC_BE.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
