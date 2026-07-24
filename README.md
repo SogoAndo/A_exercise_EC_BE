@@ -19,9 +19,9 @@ Apps/
   A_exercise_EC_BE.Presentation/
 Tests/
   A_exercise_EC_BE.Domains.Tests/
-  A_exercise_EC_BE.Application.Tests/
+  A_exercise_EC_BE.Applications.Tests/
   A_exercise_EC_BE.Infrastructures.Tests/
-  A_exercise_EC_BE.Presentation.Tests/
+  A_exercise_EC_BE.Presentations.Tests/
 ```
 
 ## 対象ユースケース

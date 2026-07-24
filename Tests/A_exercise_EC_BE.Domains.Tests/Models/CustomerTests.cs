@@ -1,5 +1,5 @@
-using A_exercise_EC_BE.Exceptions;
-using A_exercise_EC_BE.Models;
+using A_exercise_EC_BE.Domains.Exceptions;
+using A_exercise_EC_BE.Domains.Models;
 
 namespace A_exercise_EC_BE.Tests.Models;
 

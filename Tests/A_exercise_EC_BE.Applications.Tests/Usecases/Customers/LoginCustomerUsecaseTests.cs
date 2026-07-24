@@ -1,11 +1,11 @@
-using A_exercise_EC_BE.Application.Security;
-using A_exercise_EC_BE.Application.Usecases.Customers;
-using A_exercise_EC_BE.Exceptions;
-using A_exercise_EC_BE.Models;
-using A_exercise_EC_BE.Repositories;
+using A_exercise_EC_BE.Applications.Security;
+using A_exercise_EC_BE.Applications.Usecases.Customers;
+using A_exercise_EC_BE.Domains.Exceptions;
+using A_exercise_EC_BE.Domains.Models;
+using A_exercise_EC_BE.Domains.Repositories;
 using Moq;
 
-namespace A_exercise_EC_BE.Application.Tests.Usecases.Customers;
+namespace A_exercise_EC_BE.Applications.Tests.Usecases.Customers;
 
 [TestClass]
 [TestCategory("Application/Usecases")]

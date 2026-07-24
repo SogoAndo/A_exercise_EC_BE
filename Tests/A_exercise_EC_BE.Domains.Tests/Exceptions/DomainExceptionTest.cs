@@ -1,5 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using A_exercise_EC_BE.Exceptions;
+using A_exercise_EC_BE.Domains.Exceptions;
 
 namespace A_exercise_EC_BE.Tests.Exceptions;
 

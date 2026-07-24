@@ -4,8 +4,8 @@ using A_exercise_EC_BE.Applications.Usecases.Customers;
 using A_exercise_EC_BE.Domains.Repositories;
 using A_exercise_EC_BE.Infrastructures.Repositories;
 using A_exercise_EC_BE.Infrastructures.Security;
-using A_exercise_EC_BE.Presentation.Authentication;
-using A_exercise_EC_BE.Presentation.Configs;
+using A_exercise_EC_BE.Presentations.Authentication;
+using A_exercise_EC_BE.Presentations.Configs;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace A_exercise_EC_BE.Presentation.Tests.Configs;
+namespace A_exercise_EC_BE.Presentations.Tests.Configs;
 
 [TestClass]
 [TestCategory("Presentation/Configs")]

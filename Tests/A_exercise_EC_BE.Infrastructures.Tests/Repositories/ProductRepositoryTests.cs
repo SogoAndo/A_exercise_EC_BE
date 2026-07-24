@@ -8,7 +8,7 @@ using A_exercise_EC_BE.Infrastructures.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using A_exercise_EC_BE.Presentation.Configs;
+using A_exercise_EC_BE.Presentations.Configs;
 
 namespace A_exercise_EC_BE.Infrastructures.Tests.Repositories;
 

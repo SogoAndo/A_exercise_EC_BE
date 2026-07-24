@@ -1,4 +1,4 @@
-using A_exercise_EC_BE.Presentation.Configs;
+using A_exercise_EC_BE.Presentations.Configs;
 
 var builder = WebApplication.CreateBuilder(args);
 

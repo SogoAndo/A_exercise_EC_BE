@@ -1,8 +1,8 @@
-using A_exercise_EC_BE.Exceptions;
-using A_exercise_EC_BE.Models;
-using A_exercise_EC_BE.Presentation.ViewModels.Accounts;
+using A_exercise_EC_BE.Domains.Exceptions;
+using A_exercise_EC_BE.Domains.Models;
+using A_exercise_EC_BE.Presentations.ViewModels.Accounts;
 
-namespace A_exercise_EC_BE.Presentation.Adapters;
+namespace A_exercise_EC_BE.Presentations.Adapters;
 
 /// <summary>
 /// 顧客アカウント登録ViewModelを

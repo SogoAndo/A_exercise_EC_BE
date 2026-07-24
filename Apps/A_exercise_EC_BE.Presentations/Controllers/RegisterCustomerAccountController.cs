@@ -1,9 +1,9 @@
-using A_exercise_EC_BE.Application.Usecases.Customers;
-using A_exercise_EC_BE.Presentation.Adapters;
-using A_exercise_EC_BE.Presentation.ViewModels.Accounts;
+using A_exercise_EC_BE.Applications.Usecases.Customers;
+using A_exercise_EC_BE.Presentations.Adapters;
+using A_exercise_EC_BE.Presentations.ViewModels.Accounts;
 using Microsoft.AspNetCore.Mvc;
 
-namespace A_exercise_EC_BE.Presentation.Controllers;
+namespace A_exercise_EC_BE.Presentations.Controllers;
 
 /// <summary>
 /// 顧客アカウント登録API

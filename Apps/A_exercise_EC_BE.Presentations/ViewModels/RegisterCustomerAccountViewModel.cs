@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace A_exercise_EC_BE.Presentation.ViewModels.Accounts;
+namespace A_exercise_EC_BE.Presentations.ViewModels.Accounts;
 
 /// <summary>
 /// 顧客アカウント登録画面の入力情報
