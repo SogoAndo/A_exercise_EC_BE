@@ -10,6 +10,7 @@ using A_exercise_EC_BE.Infrastructure.Shared;
 using A_exercise_EC_BE.Application.Security;
 using A_exercise_EC_BE.Application.Usecases;
 using A_exercise_EC_BE.Application.Usecases.Customers;
+using A_exercise_EC_BE.Presentation.Adapters;
 
 namespace A_exercise_EC_BE.Presentation.Configs;
 /// <summary>
@@ -112,6 +113,7 @@ public static class ApplicationDependencyExtensions
         services.AddAuthorization();
 
         // RegisterBookViewModelからドメインオブジェクト:Bookへ変換するアダプタ
+        services.AddScoped<RegisterCustomerAccountViewModelAdapter>();
         return services;
     }
 
