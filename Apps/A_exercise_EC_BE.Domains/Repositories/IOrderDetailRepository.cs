@@ -15,6 +15,7 @@ public interface IOrderDetailRepository
     /// </param>
     /// <returns>なし</returns>
     Task CreateRangeAsync(
+        int orderId,
         IReadOnlyCollection<OrdersDetail>
             orderDetails
     );

@@ -25,10 +25,6 @@ public class ProductRepository(AppDbContext context, ProductFactory factory)
 
             return await factory.RestoreAsync(entities);
         }
-        catch (InternalException)
-        {
-            throw;
-        }
         catch (Exception exception)
         {
             throw new InternalException(
@@ -51,10 +47,6 @@ public class ProductRepository(AppDbContext context, ProductFactory factory)
 
             return await factory.RestoreAsync(entities);
         }
-        catch (InternalException)
-        {
-            throw;
-        }
         catch (Exception exception)
         {
             throw new InternalException(
@@ -75,10 +67,6 @@ public class ProductRepository(AppDbContext context, ProductFactory factory)
             return entity is null
                 ? null
                 : await factory.RestoreAsync(entity);
-        }
-        catch (InternalException)
-        {
-            throw;
         }
         catch (Exception exception)
         {

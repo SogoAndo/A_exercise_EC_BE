@@ -4,6 +4,7 @@ using A_exercise_EC_BE.Domains.Models;
 using A_exercise_EC_BE.Domains.Repositories;
 using A_exercise_EC_BE.Infrastructures.Contexts;
 using A_exercise_EC_BE.Infrastructures.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace A_exercise_EC_BE.Infrastructures.Repositories;
 
@@ -41,24 +42,20 @@ public class OrderDetailRepository
         _adapter = adapter;
     }
 
-    /// <inheritdoc />
     public async Task CreateRangeAsync(
-        IReadOnlyCollection<OrdersDetail>
-            orderDetails
-    )
+    int orderId,
+    IReadOnlyCollection<OrdersDetail> orderDetails)
     {
         try
         {
             _ = orderDetails
                 ?? throw new InternalException(
-                    "永続化する注文明細がnullです。"
-                );
+                    "永続化する注文明細がnullです。");
 
             if (orderDetails.Count == 0)
             {
                 throw new InternalException(
-                    "永続化する注文明細が存在しません。"
-                );
+                    "永続化する注文明細が存在しません。");
             }
 
             var entities =
@@ -67,31 +64,47 @@ public class OrderDetailRepository
             foreach (var orderDetail
                 in orderDetails)
             {
+                var productEntity =
+                    await _context.Products
+                        .SingleOrDefaultAsync(
+                            product =>
+                                product.ProductUuid
+                                == orderDetail.Product
+                                    .ProductUuid);
+
+                if (productEntity is null)
+                {
+                    throw new InternalException(
+                        $"商品UUID:"
+                        + $"{orderDetail.Product.ProductUuid}"
+                        + "の商品が存在しません。");
+                }
+
                 var entity =
                     await _adapter.ConvertAsync(
-                        orderDetail
-                    );
+                        orderDetail);
 
-                entities.Add(entity);
+                entity.OrderId =
+                    orderId;
+
+                entity.ProductId =
+                    productEntity.Id;
+
+                entities.Add(
+                    entity);
             }
 
             await _context.OrdersDetails
                 .AddRangeAsync(
-                    entities
-                );
+                    entities);
 
             await _context.SaveChangesAsync();
-        }
-        catch (InternalException)
-        {
-            throw;
         }
         catch (Exception ex)
         {
             throw new InternalException(
                 "注文明細の永続化中に予期しないエラーが発生しました。",
-                ex
-            );
+                ex);
         }
     }
 }

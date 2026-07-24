@@ -26,10 +26,7 @@ public class CustomerRepository(
                 ? null
                 : await _adapter.RestoreAsync(entity);
         }
-        catch (InternalException)
-        {
-            throw;
-        }
+
         catch (Exception exception)
         {
             throw new InternalException(
