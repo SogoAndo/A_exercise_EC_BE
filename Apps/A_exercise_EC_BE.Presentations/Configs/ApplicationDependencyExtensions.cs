@@ -87,8 +87,15 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<
             ICustomerAccessTokenIssuer,
             CustomerJwtTokenIssuer>();
-        services.Configure<CustomerJwtOptions>(
-            config.GetSection(CustomerJwtOptions.SectionName));
+        services.AddSingleton<
+            IValidateOptions<CustomerJwtOptions>,
+            CustomerJwtOptionsValidator>();
+        services
+            .AddOptions<CustomerJwtOptions>()
+            .Bind(
+                config.GetSection(
+                    CustomerJwtOptions.SectionName))
+            .ValidateOnStart();
 
         return services;
     }

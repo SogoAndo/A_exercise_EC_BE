@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>A_exercise_EC_BE.Presentations.Development</UserSecretsId>
     <!-- XMLドキュメントを出力してSwaggerに取り込ませる -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- XMLコメント未記載の警告を抑制(任意) -->
