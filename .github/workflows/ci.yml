@@ -1,0 +1,342 @@
+# ============================================================
+# 顧客システム バックエンド CI
+#
+# 【後から見返すときの要点】
+# - 対象ソースはリポジトリ直下の A_exercise_EC_BE/ 配下
+# - DB構造は管理システムと共通
+# - CIでは本番DBを使用せず、GitHub Actions内の使い捨てDBを使用
+# - 接続文字列の構成キーも管理システムと同じ
+#   ConnectionStrings:PostgreSQLConnection
+# - 顧客認証だけは管理者認証と分離し、CustomerJwtを使用
+# ============================================================
+
+name: EC Backend CI
+
+on:
+  # devでCIを確認し、main反映後にも再実行する
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - "A_exercise_EC_BE/**"
+      - ".github/workflows/ec_backend_ci.yml"
+
+  # mainへのPull Requestでも実行する
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "A_exercise_EC_BE/**"
+      - ".github/workflows/ec_backend_ci.yml"
+
+  # GitHub Actions画面から手動実行できる
+  workflow_dispatch:
+
+# リポジトリの読み取りだけを許可する
+permissions:
+  contents: read
+
+# 同じブランチでCIが連続した場合は、古い実行を中止する
+concurrency:
+  group: ec-backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # 顧客バックエンドのルート
+  # フロントエンドの作業へ移った後も、このパスを基準に確認する
+  BACKEND_DIR: A_exercise_EC_BE
+
+  # 管理システムと同じ接続文字列キーを使用する
+  ConnectionStrings__PostgreSQLConnection: >-
+    Host=localhost;
+    Port=5432;
+    Database=All_Exercise;
+    Username=postgres;
+    Password=postgres
+
+  # CI専用の顧客JWT設定
+  # 本番用のCUSTOMER_JWT_SIGNING_KEYはCIへ渡さない
+  CustomerJwt__SigningKey: >-
+    EC-CI-Only-Signing-Key-Do-Not-Use-In-Production-2026
+  CustomerJwt__Issuer: http://localhost
+  CustomerJwt__Audience: http://localhost
+
+  DOTNET_ENVIRONMENT: Test
+  ASPNETCORE_ENVIRONMENT: Test
+
+jobs:
+  build-and-test:
+    name: ビルドとテスト
+    runs-on: ubuntu-latest
+
+    # インフラストラクチャ層のテスト用DB
+    # DB名・テーブル構成は管理システム側と同じ
+    services:
+      postgres:
+        image: postgres:17
+
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: All_Exercise
+
+        ports:
+          - 5432:5432
+
+        # DBが接続可能になるまで待機する
+        options: >-
+          --health-cmd "pg_isready -U postgres -d All_Exercise"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # GitHub上のソースコードをRunnerへ取得する
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      # .NET 10 SDKを使用できるようにする
+      - name: .NET SDKをセットアップ
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      # ソリューション、テストプロジェクト、DB用SQLを自動検出する
+      #
+      # プロジェクト名が単数形・複数形で多少異なっても、
+      # A_exercise_EC_BE配下に各層が1つずつあれば検出できるようにする
+      - name: プロジェクト構成を確認
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -d "${BACKEND_DIR}"
+          test -d "${BACKEND_DIR}/Apps"
+
+          find_one()
+          {
+            local description="$1"
+            shift
+
+            mapfile -t matches < <(
+              find "$@" \
+                -type f \
+                ! -path "*/bin/*" \
+                ! -path "*/obj/*" \
+                | sort
+            )
+
+            if [ "${#matches[@]}" -ne 1 ]; then
+              echo "::error::${description}が1件ではありません"
+              printf '%s\n' "${matches[@]}"
+              exit 1
+            fi
+
+            printf '%s' "${matches[0]}"
+          }
+
+          mapfile -t solutions < <(
+            find "${BACKEND_DIR}" \
+              -maxdepth 1 \
+              -type f \
+              \( -name "*.sln" -o -name "*.slnx" \) \
+              | sort
+          )
+
+          if [ "${#solutions[@]}" -ne 1 ]; then
+            echo "::error::${BACKEND_DIR}直下のソリューションが1件ではありません"
+            printf '%s\n' "${solutions[@]}"
+            exit 1
+          fi
+
+          solution_path="${solutions[0]}"
+
+          domain_test="$(
+            find_one \
+              "ドメイン層テストプロジェクト" \
+              "${BACKEND_DIR}" \
+              -iname "*domain*.tests.csproj"
+          )"
+
+          application_test="$(
+            find_one \
+              "アプリケーション層テストプロジェクト" \
+              "${BACKEND_DIR}" \
+              -iname "*application*.tests.csproj"
+          )"
+
+          infrastructure_test="$(
+            find_one \
+              "インフラストラクチャ層テストプロジェクト" \
+              "${BACKEND_DIR}" \
+              -iname "*infrastructure*.tests.csproj"
+          )"
+
+          presentation_test="$(
+            find_one \
+              "プレゼンテーション層テストプロジェクト" \
+              "${BACKEND_DIR}" \
+              -iname "*presentation*.tests.csproj"
+          )"
+
+          schema_sql="$(
+            find_one \
+              "テーブル作成SQL" \
+              "${BACKEND_DIR}" \
+              -name "02_create_tables.sql"
+          )"
+
+          sample_sql="$(
+            find_one \
+              "サンプルデータSQL" \
+              "${BACKEND_DIR}" \
+              -name "03_insert_sample_data.sql"
+          )"
+
+          {
+            echo "SOLUTION_PATH=${solution_path}"
+            echo "DOMAIN_TEST_PROJECT=${domain_test}"
+            echo "APPLICATION_TEST_PROJECT=${application_test}"
+            echo "INFRASTRUCTURE_TEST_PROJECT=${infrastructure_test}"
+            echo "PRESENTATION_TEST_PROJECT=${presentation_test}"
+            echo "SCHEMA_SQL=${schema_sql}"
+            echo "SAMPLE_SQL=${sample_sql}"
+          } >> "${GITHUB_ENV}"
+
+          echo "使用するソリューション: ${solution_path}"
+          echo "ドメイン層テスト: ${domain_test}"
+          echo "アプリケーション層テスト: ${application_test}"
+          echo "インフラストラクチャ層テスト: ${infrastructure_test}"
+          echo "プレゼンテーション層テスト: ${presentation_test}"
+
+      # psqlコマンドが使用できることを確認する
+      - name: PostgreSQLクライアントを確認
+        run: |
+          set -euo pipefail
+
+          if ! command -v psql > /dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+
+          psql --version
+
+      # pg_dump 17由来のSQLに含まれる
+      # \restrictと\unrestrictを除去する
+      - name: DB初期化SQLを準備
+        run: |
+          set -euo pipefail
+
+          mkdir -p /tmp/ec-db
+
+          sed \
+            -e '/^\\restrict /d' \
+            -e '/^\\unrestrict /d' \
+            "${SCHEMA_SQL}" \
+            > /tmp/ec-db/02_create_tables.sql
+
+          sed \
+            -e '/^\\restrict /d' \
+            -e '/^\\unrestrict /d' \
+            "${SAMPLE_SQL}" \
+            > /tmp/ec-db/03_insert_sample_data.sql
+
+      # ここで初期化するのはGitHub Actions内の使い捨てDBだけ
+      # 本番Azure DBへSQLを流す処理ではない
+      - name: スキーマとテストデータを投入
+        env:
+          PGPASSWORD: postgres
+        run: |
+          set -euo pipefail
+
+          psql \
+            -h localhost \
+            -p 5432 \
+            -U postgres \
+            -d All_Exercise \
+            -v ON_ERROR_STOP=1 \
+            -f /tmp/ec-db/02_create_tables.sql
+
+          psql \
+            -h localhost \
+            -p 5432 \
+            -U postgres \
+            -d All_Exercise \
+            -v ON_ERROR_STOP=1 \
+            -f /tmp/ec-db/03_insert_sample_data.sql
+
+      # 管理側と共通の主要テーブルが作成されていることを確認する
+      - name: テストDBを確認
+        env:
+          PGPASSWORD: postgres
+        run: |
+          set -euo pipefail
+
+          psql \
+            -h localhost \
+            -p 5432 \
+            -U postgres \
+            -d All_Exercise \
+            -v ON_ERROR_STOP=1 \
+            -c "
+              SELECT 'customer' AS table_name, COUNT(*) FROM customer
+              UNION ALL
+              SELECT 'product', COUNT(*) FROM product
+              UNION ALL
+              SELECT 'orders', COUNT(*) FROM orders;
+            "
+
+      # ソリューション全体の依存パッケージを復元する
+      - name: 依存パッケージを復元
+        run: |
+          dotnet restore "${SOLUTION_PATH}"
+
+      # コードの書式がdotnet formatに一致しているか確認する
+      - name: 書式チェック
+        run: |
+          dotnet format "${SOLUTION_PATH}" \
+            --verify-no-changes \
+            --severity warn \
+            --no-restore
+
+      # 顧客バックエンド全体をRelease構成でビルドする
+      - name: ビルド
+        run: |
+          dotnet build "${SOLUTION_PATH}" \
+            --configuration Release \
+            --no-restore \
+            -warnaserror
+
+      # 各層を分けることで、失敗した層をActions画面ですぐ判別できる
+      - name: テスト（ドメイン層）
+        run: |
+          dotnet test \
+            "${DOMAIN_TEST_PROJECT}" \
+            --configuration Release \
+            --no-build \
+            --logger "console;verbosity=detailed"
+
+      - name: テスト（アプリケーション層）
+        run: |
+          dotnet test \
+            "${APPLICATION_TEST_PROJECT}" \
+            --configuration Release \
+            --no-build \
+            --logger "console;verbosity=detailed"
+
+      - name: テスト（インフラストラクチャ層）
+        run: |
+          dotnet test \
+            "${INFRASTRUCTURE_TEST_PROJECT}" \
+            --configuration Release \
+            --no-build \
+            --logger "console;verbosity=detailed"
+
+      - name: テスト（プレゼンテーション層）
+        run: |
+          dotnet test \
+            "${PRESENTATION_TEST_PROJECT}" \
+            --configuration Release \
+            --no-build \
+            --logger "console;verbosity=detailed"

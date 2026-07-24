@@ -1,0 +1,564 @@
+# ============================================================
+# 顧客システム バックエンド CD
+#
+# 【後から見返すときの要点】
+# - 顧客APIだけを /var/www/fullness-ec-api へ配置する
+# - 管理APIとは別の systemd サービス fullness-ec-api を使用
+# - 管理APIは5000番、顧客APIは5100番
+# - DBは管理システムと同じAzure PostgreSQLを共用
+# - 接続文字列Secretも管理側と同じ DB_CONNECTION_STRING
+# - 顧客JWT鍵だけは管理者JWT鍵と分離する
+# - 本番DBへテーブル作成SQLやサンプルSQLは流さない
+# ============================================================
+
+name: EC Backend CD
+
+on:
+  # mainへのpushをEC Backend CIが検証し、
+  # そのCIが成功した後に自動実行する
+  workflow_run:
+    workflows:
+      - "EC Backend CI"
+    types:
+      - completed
+    branches:
+      - main
+
+  # 初回確認や緊急時に手動実行できる
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Azure VMへ顧客バックエンドを実際にデプロイする"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# 顧客バックエンドのデプロイを同時実行しない
+# 管理API・フロントとは別グループなので互いのCDを妨げない
+concurrency:
+  group: ec-backend-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Azure VMへデプロイ
+    runs-on: ubuntu-latest
+
+    # ENABLE_EC_PRODUCTION_DEPLOY=true の場合だけ実デプロイする
+    #
+    # 自動：
+    # mainへのpushでEC Backend CIが成功した場合
+    #
+    # 手動：
+    # Run workflowでdeployへチェックを入れた場合
+    if: >-
+      vars.ENABLE_EC_PRODUCTION_DEPLOY == 'true' &&
+      (
+        (
+          github.event_name == 'workflow_dispatch' &&
+          inputs.deploy
+        ) ||
+        (
+          github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main'
+        )
+      )
+
+    env:
+      # 顧客バックエンドのWeb APIプロジェクト
+      # 実際のリポジトリ構造：
+      # A_exercise_EC_BE/Apps/A_exercise_EC_BE.Presentation/
+      PROJECT_PATH: >-
+        A_exercise_EC_BE/Apps/A_exercise_EC_BE.Presentation/A_exercise_EC_BE.Presentation.csproj
+
+      # dotnet publish後に生成される起動DLL
+      APP_DLL: A_exercise_EC_BE.Presentation.dll
+
+      # Azure VM上の顧客バックエンド専用配置先
+      DEPLOY_DIR: /var/www/fullness-ec-api
+
+      # 失敗時に戻せるよう直前の成果物を保存する
+      BACKUP_DIR: /var/www/fullness-ec-api.previous
+
+      # 管理APIのfullness-apiとは別サービス
+      SERVICE_NAME: fullness-ec-api
+
+      # 顧客APIは同じVM内の5100番で待ち受ける
+      # 特定APIの有無に依存しないよう、ルートからHTTP応答を確認する
+      HEALTHCHECK_URL: http://127.0.0.1:5100/
+
+    steps:
+      # workflow_runの場合は、CIで検証済みのコミットを取得する
+      - name: CIで検証されたコミットをチェックアウト
+        if: github.event_name == 'workflow_run'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # 手動実行の場合はmainの最新状態を取得する
+      - name: mainをチェックアウト
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # .NET 10 SDKを準備する
+      - name: .NET SDKをセットアップ
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      # PROJECT_PATHの記述ミスをデプロイ前に検出する
+      - name: 発行対象を確認
+        run: |
+          set -euo pipefail
+
+          test -f "${PROJECT_PATH}"
+
+          echo "発行対象: ${PROJECT_PATH}"
+          echo "起動DLL: ${APP_DLL}"
+
+      # 顧客Web APIが必要とするNuGetパッケージを復元する
+      - name: 依存パッケージを復元
+        run: |
+          dotnet restore "${PROJECT_PATH}"
+
+      # VMへ配置するframework-dependent成果物を作成する
+      # VMには.NETランタイム導入済みのためself-containedにはしない
+      - name: 発行
+        run: |
+          dotnet publish "${PROJECT_PATH}" \
+            --configuration Release \
+            --output "${{ github.workspace }}/publish" \
+            --no-restore
+
+      # DLLが生成されていなければ、VMへ送る前に失敗させる
+      - name: 発行結果を確認
+        run: |
+          set -euo pipefail
+
+          test -f \
+            "${{ github.workspace }}/publish/${APP_DLL}"
+
+          echo "顧客バックエンドの発行成果物を確認しました"
+
+      # 管理システムCDと同じSSH関連Secretsを使用する
+      - name: SSH鍵を準備
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.TRAININGSERVER_KEY }}
+          VM_HOST: ${{ secrets.AZURE_HOST }}
+          VM_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          set -euo pipefail
+
+          test -n "${SSH_PRIVATE_KEY}"
+          test -n "${VM_HOST}"
+          test -n "${VM_USER}"
+
+          mkdir -p ~/.ssh
+
+          printf '%s\n' "${SSH_PRIVATE_KEY}" \
+            | tr -d '\r' \
+            > ~/.ssh/deploy_key
+
+          chmod 600 ~/.ssh/deploy_key
+
+          ssh-keyscan \
+            -H "${VM_HOST}" \
+            >> ~/.ssh/known_hosts
+
+          chmod 600 ~/.ssh/known_hosts
+
+      # 成果物転送前にSSH接続だけを確認する
+      - name: SSH接続を確認
+        env:
+          VM_HOST: ${{ secrets.AZURE_HOST }}
+          VM_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -i ~/.ssh/deploy_key \
+            "${VM_USER}@${VM_HOST}" \
+            "echo 'SSH connection successful' && hostname"
+
+      # systemdのEnvironmentFileとして使用するec-api.envを作る
+      #
+      # DB_CONNECTION_STRING：
+      # 管理システムと同じAzure DB接続文字列を共用する
+      #
+      # CUSTOMER_JWT_SIGNING_KEY：
+      # 顧客用に新規登録し、管理者JWT鍵とは別の値を使用する
+      - name: 環境変数ファイルを生成
+        shell: bash
+        env:
+          VM_HOST: ${{ secrets.AZURE_HOST }}
+          DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
+          CUSTOMER_JWT_SIGNING_KEY: ${{ secrets.CUSTOMER_JWT_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+
+          test -n "${VM_HOST}"
+          test -n "${DB_CONNECTION_STRING}"
+          test -n "${CUSTOMER_JWT_SIGNING_KEY}"
+
+          # systemd EnvironmentFileは1設定1行なので、
+          # Secretに改行があれば安全のため失敗させる
+          for variable_name in \
+            DB_CONNECTION_STRING \
+            CUSTOMER_JWT_SIGNING_KEY
+          do
+            variable_value="${!variable_name}"
+
+            if [[ "${variable_value}" == *$'\n'* ]] ||
+               [[ "${variable_value}" == *$'\r'* ]]; then
+              echo "::error::${variable_name}に改行が含まれています"
+              exit 1
+            fi
+          done
+
+          umask 077
+
+          {
+            printf 'ASPNETCORE_ENVIRONMENT=Production\n'
+            printf 'DOTNET_ENVIRONMENT=Production\n'
+
+            # 外部へ5100番を直接公開せず、
+            # 同一VM上のNginxからだけ接続できるようにする
+            printf 'ASPNETCORE_URLS=http://127.0.0.1:5100\n'
+
+            # 管理システムと同じ構成キー・同じDB接続先
+            printf 'ConnectionStrings__PostgreSQLConnection=%s\n' \
+              "${DB_CONNECTION_STRING}"
+
+            # 顧客認証専用JWT設定
+            printf 'CustomerJwt__SigningKey=%s\n' \
+              "${CUSTOMER_JWT_SIGNING_KEY}"
+
+            printf 'CustomerJwt__Issuer=http://%s\n' \
+              "${VM_HOST}"
+
+            printf 'CustomerJwt__Audience=http://%s\n' \
+              "${VM_HOST}"
+
+            # 現在はHTTP運用のためfalse
+            # HTTPS化した場合は設定方針を見直す
+            printf 'AuthCookie__Secure=false\n'
+
+            # APIリファレンスを本番で使う場合の設定
+            printf 'Swagger__Enabled=true\n'
+
+            # 現在の公開元はAzure VMのパブリックIP
+            printf 'Cors__AllowedOrigins__0=http://%s\n' \
+              "${VM_HOST}"
+          } > ec-api.env
+
+          chmod 600 ec-api.env
+
+          # Secret値をログへ出さず、設定名だけ確認する
+          sed \
+            -E \
+            's/=.*/=<masked>/' \
+            ec-api.env
+
+      # VM上の一時転送先を毎回空にする
+      - name: VMの一時配置先を準備
+        env:
+          VM_HOST: ${{ secrets.AZURE_HOST }}
+          VM_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -i ~/.ssh/deploy_key \
+            "${VM_USER}@${VM_HOST}" \
+            "rm -rf /tmp/fullness-ec-publish &&
+             mkdir -p /tmp/fullness-ec-publish"
+
+      # dotnet publishの成果物をVMへ転送する
+      - name: 成果物を転送
+        env:
+          VM_HOST: ${{ secrets.AZURE_HOST }}
+          VM_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          set -euo pipefail
+
+          rsync \
+            -az \
+            --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            "${{ github.workspace }}/publish/" \
+            "${VM_USER}@${VM_HOST}:/tmp/fullness-ec-publish/"
+
+      # ec-api.envを一時ファイルとしてVMへ転送する
+      - name: 環境変数ファイルを転送
+        env:
+          VM_HOST: ${{ secrets.AZURE_HOST }}
+          VM_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          set -euo pipefail
+
+          scp \
+            -i ~/.ssh/deploy_key \
+            ec-api.env \
+            "${VM_USER}@${VM_HOST}:/tmp/ec-api.env"
+
+      # 直前の成果物をバックアップ後、新しい成果物を配置する
+      #
+      # 顧客バックエンドは商品画像を書き込まないため、
+      # 管理側CDにある画像ディレクトリ除外処理は不要
+      - name: 成果物を配置
+        env:
+          VM_HOST: ${{ secrets.AZURE_HOST }}
+          VM_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -i ~/.ssh/deploy_key \
+            "${VM_USER}@${VM_HOST}" \
+            "DEPLOY_DIR='${DEPLOY_DIR}' \
+             BACKUP_DIR='${BACKUP_DIR}' \
+             APP_DLL='${APP_DLL}' \
+             bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          test -n "${DEPLOY_DIR}"
+          test -n "${BACKUP_DIR}"
+          test -n "${APP_DLL}"
+
+          sudo mkdir -p \
+            "${DEPLOY_DIR}" \
+            /etc/fullness
+
+          echo "=== 現在の成果物をバックアップ ==="
+
+          if sudo test -f "${DEPLOY_DIR}/${APP_DLL}"; then
+            sudo rm -rf "${BACKUP_DIR}"
+            sudo mkdir -p "${BACKUP_DIR}"
+
+            sudo rsync \
+              -a \
+              --delete \
+              "${DEPLOY_DIR}/" \
+              "${BACKUP_DIR}/"
+
+            echo "現在の成果物を${BACKUP_DIR}へ保存しました"
+          else
+            echo "初回デプロイのため、成果物バックアップを省略します"
+          fi
+
+          echo "=== 現在のec-api.envをバックアップ ==="
+
+          if sudo test -f /etc/fullness/ec-api.env; then
+            sudo cp \
+              /etc/fullness/ec-api.env \
+              /etc/fullness/ec-api.env.previous
+
+            sudo chown \
+              root:fullness \
+              /etc/fullness/ec-api.env.previous
+
+            sudo chmod \
+              640 \
+              /etc/fullness/ec-api.env.previous
+          else
+            echo "初回デプロイのため、環境変数バックアップを省略します"
+          fi
+
+          echo "=== 新しい成果物を配置 ==="
+
+          sudo rsync \
+            -a \
+            --delete \
+            /tmp/fullness-ec-publish/ \
+            "${DEPLOY_DIR}/"
+
+          sudo chown \
+            -R fullness:fullness \
+            "${DEPLOY_DIR}"
+
+          echo "=== 新しいec-api.envを配置 ==="
+
+          sudo install \
+            -o root \
+            -g fullness \
+            -m 640 \
+            /tmp/ec-api.env \
+            /etc/fullness/ec-api.env
+          REMOTE_SCRIPT
+
+      # 顧客APIだけを再起動する
+      # 管理API(fullness-api)とフロント(fullness-web)には触れない
+      - name: サービスを再起動
+        env:
+          VM_HOST: ${{ secrets.AZURE_HOST }}
+          VM_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -i ~/.ssh/deploy_key \
+            "${VM_USER}@${VM_HOST}" \
+            "SERVICE_NAME='${SERVICE_NAME}' \
+             DEPLOY_DIR='${DEPLOY_DIR}' \
+             BACKUP_DIR='${BACKUP_DIR}' \
+             APP_DLL='${APP_DLL}' \
+             HEALTHCHECK_URL='${HEALTHCHECK_URL}' \
+             bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          test -n "${SERVICE_NAME}"
+          test -n "${DEPLOY_DIR}"
+          test -n "${BACKUP_DIR}"
+          test -n "${APP_DLL}"
+          test -n "${HEALTHCHECK_URL}"
+
+          cleanup()
+          {
+            rm -rf \
+              /tmp/fullness-ec-publish \
+              /tmp/ec-api.env
+          }
+
+          rollback()
+          {
+            echo "=== 直前の顧客バックエンドへロールバック ==="
+
+            # ロールバック中の途中エラーだけで処理を終了しない
+            set +e
+
+            sudo systemctl stop \
+              "${SERVICE_NAME}.service"
+
+            if sudo test -f "${BACKUP_DIR}/${APP_DLL}"; then
+              sudo rsync \
+                -a \
+                --delete \
+                "${BACKUP_DIR}/" \
+                "${DEPLOY_DIR}/"
+
+              sudo chown \
+                -R fullness:fullness \
+                "${DEPLOY_DIR}"
+
+              if sudo test -f /etc/fullness/ec-api.env.previous; then
+                sudo install \
+                  -o root \
+                  -g fullness \
+                  -m 640 \
+                  /etc/fullness/ec-api.env.previous \
+                  /etc/fullness/ec-api.env
+              fi
+
+              sudo systemctl daemon-reload
+              sudo systemctl restart \
+                "${SERVICE_NAME}.service"
+
+              sleep 8
+
+              sudo systemctl \
+                --no-pager \
+                --full \
+                status "${SERVICE_NAME}.service"
+
+              echo "直前の顧客バックエンドを復元しました"
+            else
+              echo "初回デプロイのため復元可能な成果物がありません"
+            fi
+
+            cleanup
+            exit 1
+          }
+
+          echo "=== systemd設定を再読み込み ==="
+
+          sudo systemctl daemon-reload
+
+          echo "=== 顧客APIサービスを有効化 ==="
+
+          sudo systemctl enable \
+            "${SERVICE_NAME}.service"
+
+          echo "=== 顧客APIサービスを再起動 ==="
+
+          if ! sudo systemctl restart \
+            "${SERVICE_NAME}.service"; then
+
+            sudo journalctl \
+              -u "${SERVICE_NAME}.service" \
+              -n 100 \
+              --no-pager
+
+            rollback
+          fi
+
+          sleep 8
+
+          echo "=== active状態を確認 ==="
+
+          if ! sudo systemctl is-active \
+            --quiet "${SERVICE_NAME}.service"; then
+
+            sudo journalctl \
+              -u "${SERVICE_NAME}.service" \
+              -n 100 \
+              --no-pager
+
+            rollback
+          fi
+
+          echo "=== 5100番のHTTP応答を確認 ==="
+
+          # ルートが404でも、HTTP応答が返ればKestrelへの接続は成功
+          # 000は接続不能を表すため失敗とする
+          http_status="$(
+            curl \
+              --silent \
+              --show-error \
+              --output /dev/null \
+              --write-out '%{http_code}' \
+              --retry 5 \
+              --retry-connrefused \
+              --retry-delay 2 \
+              --connect-timeout 5 \
+              "${HEALTHCHECK_URL}"
+          )"
+
+          if [ "${http_status}" = "000" ]; then
+            echo "顧客APIへ接続できませんでした"
+
+            sudo journalctl \
+              -u "${SERVICE_NAME}.service" \
+              -n 100 \
+              --no-pager
+
+            rollback
+          fi
+
+          echo "HTTPステータス: ${http_status}"
+
+          echo "=== 起動状態 ==="
+
+          sudo systemctl \
+            --no-pager \
+            --full \
+            status "${SERVICE_NAME}.service"
+
+          echo "=== デプロイ完了 ==="
+          echo "fullness-ec-apiが正常に起動しました"
+
+          cleanup
+          REMOTE_SCRIPT
+
+      # Runner上のSecretを含む一時ファイルを必ず削除する
+      - name: ローカル一時ファイルを削除
+        if: always()
+        run: |
+          rm -f ec-api.env
+          rm -f ~/.ssh/deploy_key
