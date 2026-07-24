@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace A_exercise_EC_BE.Infrastructure.Security;
+namespace A_exercise_EC_BE.Infrastructures.Security;
 
 /// <summary>
 /// 顧客認証用JWTの設定。

@@ -1,4 +1,4 @@
-namespace A_exercise_EC_BE.Domain.Exceptions;
+namespace A_exercise_EC_BE.Domains.Exceptions;
 /// <summary>
 /// 内部エラーを表す例外クラス
 /// </summary>

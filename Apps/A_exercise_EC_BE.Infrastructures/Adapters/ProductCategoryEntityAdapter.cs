@@ -1,8 +1,8 @@
-using A_exercise_EC_BE.Domain.Adapters;
-using A_exercise_EC_BE.Domain.Models;
-using A_exercise_EC_BE.Domain.Exceptions;
-using A_exercise_EC_BE.Infrastructure.Entities;
-namespace A_exercise_EC_BE.Infrastructure.Adapters;
+using A_exercise_EC_BE.Domains.Adapters;
+using A_exercise_EC_BE.Domains.Models;
+using A_exercise_EC_BE.Domains.Exceptions;
+using A_exercise_EC_BE.Infrastructures.Entities;
+namespace A_exercise_EC_BE.Infrastructures.Adapters;
 /// <summary>
 /// ドメインオブジェクト:ProductCategoryとProductCategoryEntityの相互変換クラス
 /// </summary> 

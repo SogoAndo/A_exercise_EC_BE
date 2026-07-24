@@ -1,6 +1,6 @@
-using A_exercise_EC_BE.Domain.Exceptions;
+using A_exercise_EC_BE.Domains.Exceptions;
 
-namespace A_exercise_EC_BE.Domain.Models;
+namespace A_exercise_EC_BE.Domains.Models;
 
 /// <summary>
 /// 顧客を表すドメインオブジェクト

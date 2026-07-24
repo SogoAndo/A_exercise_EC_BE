@@ -1,4 +1,4 @@
-namespace A_exercise_EC_BE.Domain.Repositories;
+namespace A_exercise_EC_BE.Domains.Repositories;
 
 /// <summary>
 /// 商品在庫Repositoryのインターフェース。

@@ -1,6 +1,6 @@
-using A_exercise_EC_BE.Domain.Models;
+using A_exercise_EC_BE.Domains.Models;
 
-namespace A_exercise_EC_BE.Domain.Repositories;
+namespace A_exercise_EC_BE.Domains.Repositories;
 
 /// <summary>
 /// 注文Repositoryのインターフェース。

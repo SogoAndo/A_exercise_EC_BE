@@ -1,12 +1,12 @@
-using A_exercise_EC_BE.Domain.Exceptions;
-namespace A_exercise_EC_BE.Domain.Models;
+using A_exercise_EC_BE.Domains.Exceptions;
+namespace A_exercise_EC_BE.Domains.Models;
 /// <summary>
 /// 商品カテゴリを表すドメインオブジェクト
 /// </summary>
 public class ProductCategory
 {
     /// <summary>
-    /// 商品カテゴリ識別ID(UUID)
+    /// 商品カテゴリ識別ID(UUID)s
     /// </summary>
     public Guid CategoryUuid { get; private set; }
     /// <summary>

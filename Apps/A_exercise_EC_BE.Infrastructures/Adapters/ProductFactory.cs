@@ -1,7 +1,7 @@
-using A_exercise_EC_BE.Domain.Models;
-using A_exercise_EC_BE.Infrastructure.Entities;
+using A_exercise_EC_BE.Domains.Models;
+using A_exercise_EC_BE.Infrastructures.Entities;
 
-namespace A_exercise_EC_BE.Infrastructure.Adapters;
+namespace A_exercise_EC_BE.Infrastructures.Adapters;
 /// <summary>
 /// 商品、商品カテゴリ、商品在庫オブジェクトの相互変換Factoryクラス
 /// ドメインオブジェクト:ProductとProductEntityの相互変換

@@ -18,9 +18,9 @@ Apps/
   A_exercise_EC_BE.Infrastructure/
   A_exercise_EC_BE.Presentation/
 Tests/
-  A_exercise_EC_BE.Domain.Tests/
+  A_exercise_EC_BE.Domains.Tests/
   A_exercise_EC_BE.Application.Tests/
-  A_exercise_EC_BE.Infrastructure.Tests/
+  A_exercise_EC_BE.Infrastructures.Tests/
   A_exercise_EC_BE.Presentation.Tests/
 ```
 

@@ -1,7 +1,7 @@
-using A_exercise_EC_BE.Domain.Models;
-using A_exercise_EC_BE.Infrastructure.Entities;
+using A_exercise_EC_BE.Domains.Models;
+using A_exercise_EC_BE.Infrastructures.Entities;
 
-namespace A_exercise_EC_BE.Infrastructure.Adapters;
+namespace A_exercise_EC_BE.Infrastructures.Adapters;
 
 /// <summary>
 /// 注文、顧客、注文ステータス、支払い方法、注文明細の集約関係を構築するFactory

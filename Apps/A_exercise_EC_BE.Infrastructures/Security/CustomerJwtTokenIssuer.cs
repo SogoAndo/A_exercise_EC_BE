@@ -1,11 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using A_exercise_EC_BE.Application.Security;
+using A_exercise_EC_BE.Applications.Security;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace A_exercise_EC_BE.Infrastructure.Security;
+namespace A_exercise_EC_BE.Infrastructures.Security;
 
 /// <summary>
 /// CustomerJwt設定を使用して顧客認証用JWTを発行する。

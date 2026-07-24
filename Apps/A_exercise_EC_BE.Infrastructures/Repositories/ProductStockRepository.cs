@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 
-using A_exercise_EC_BE.Domain.Exceptions;
-using A_exercise_EC_BE.Domain.Repositories;
-using A_exercise_EC_BE.Infrastructure.Contexts;
+using A_exercise_EC_BE.Domains.Exceptions;
+using A_exercise_EC_BE.Domains.Repositories;
+using A_exercise_EC_BE.Infrastructures.Contexts;
 
-namespace A_exercise_EC_BE.Infrastructure.Repositories;
+namespace A_exercise_EC_BE.Infrastructures.Repositories;
 
 /// <summary>
 /// 商品在庫Repository。

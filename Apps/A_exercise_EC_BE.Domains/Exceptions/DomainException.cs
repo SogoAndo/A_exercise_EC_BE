@@ -1,4 +1,4 @@
-namespace A_exercise_EC_BE.Domain.Exceptions;
+namespace A_exercise_EC_BE.Domains.Exceptions;
 /// <summary>
 /// 業務ルール違反を表す例外クラス
 /// </summary>

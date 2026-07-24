@@ -1,5 +1,5 @@
-using A_exercise_EC_BE.Domain.Exceptions;
-using A_exercise_EC_BE.Domain.Models;
+using A_exercise_EC_BE.Exceptions;
+using A_exercise_EC_BE.Models;
 using A_exercise_EC_BE.Presentation.ViewModels.Accounts;
 
 namespace A_exercise_EC_BE.Presentation.Adapters;

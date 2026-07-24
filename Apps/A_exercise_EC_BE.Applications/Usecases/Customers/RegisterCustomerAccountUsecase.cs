@@ -1,7 +1,7 @@
 using A_exercise_EC_BE.Applications.Security;
-using A_exercise_EC_BE.Domain.Exceptions;
-using A_exercise_EC_BE.Domain.Models;
-using A_exercise_EC_BE.Domain.Repositories;
+using A_exercise_EC_BE.Domains.Exceptions;
+using A_exercise_EC_BE.Domains.Models;
+using A_exercise_EC_BE.Domains.Repositories;
 
 namespace A_exercise_EC_BE.Applications.Usecases.Customers;
 

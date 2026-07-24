@@ -1,11 +1,11 @@
-using A_exercise_EC_BE.Domain.Exceptions;
-using A_exercise_EC_BE.Domain.Models;
-using A_exercise_EC_BE.Domain.Repositories;
-using A_exercise_EC_BE.Infrastructure.Adapters;
-using A_exercise_EC_BE.Infrastructure.Contexts;
+using A_exercise_EC_BE.Domains.Exceptions;
+using A_exercise_EC_BE.Domains.Models;
+using A_exercise_EC_BE.Domains.Repositories;
+using A_exercise_EC_BE.Infrastructures.Adapters;
+using A_exercise_EC_BE.Infrastructures.Contexts;
 using Microsoft.EntityFrameworkCore;
 
-namespace A_exercise_EC_BE.Infrastructure.Repositories;
+namespace A_exercise_EC_BE.Infrastructures.Repositories;
 
 /// <summary>
 /// 顧客ログインで使用する顧客アカウントRepository。

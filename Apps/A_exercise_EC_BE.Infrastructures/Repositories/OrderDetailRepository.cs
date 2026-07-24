@@ -1,11 +1,11 @@
-using A_exercise_EC_BE.Domain.Adapters;
-using A_exercise_EC_BE.Domain.Exceptions;
-using A_exercise_EC_BE.Domain.Models;
-using A_exercise_EC_BE.Domain.Repositories;
-using A_exercise_EC_BE.Infrastructure.Contexts;
-using A_exercise_EC_BE.Infrastructure.Entities;
+using A_exercise_EC_BE.Domains.Adapters;
+using A_exercise_EC_BE.Domains.Exceptions;
+using A_exercise_EC_BE.Domains.Models;
+using A_exercise_EC_BE.Domains.Repositories;
+using A_exercise_EC_BE.Infrastructures.Contexts;
+using A_exercise_EC_BE.Infrastructures.Entities;
 
-namespace A_exercise_EC_BE.Infrastructure.Repositories;
+namespace A_exercise_EC_BE.Infrastructures.Repositories;
 
 /// <summary>
 /// 注文明細Repository。

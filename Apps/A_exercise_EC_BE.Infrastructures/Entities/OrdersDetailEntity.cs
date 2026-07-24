@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-namespace A_exercise_EC_BE.Infrastructure.Entities;
+namespace A_exercise_EC_BE.Infrastructures.Entities;
 
 /// <summary>
 /// 注文明細テーブルのEntity

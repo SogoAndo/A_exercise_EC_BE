@@ -1,5 +1,5 @@
-using A_exercise_EC_BE.Domain.Exceptions;
-namespace A_exercise_EC_BE.Domain.Models;
+using A_exercise_EC_BE.Domains.Exceptions;
+namespace A_exercise_EC_BE.Domains.Models;
 /// <summary>
 /// 注文ステータスを表すドメインオブジェクト
 /// </summary>

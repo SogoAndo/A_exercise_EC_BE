@@ -1,14 +1,14 @@
 <Solution>
   <Folder Name="/Apps/">
-    <Project Path="Apps/A_exercise_EC_BE.Infrastructures/A_exercise_EC_BE.Infrastructure.csproj" />
-    <Project Path="Apps/A_exercise_EC_BE.Applications/A_exercise_EC_BE.Application.csproj" />
-    <Project Path="Apps/A_exercise_EC_BE.Domains/A_exercise_EC_BE.Domain.csproj" />
-    <Project Path="Apps/A_exercise_EC_BE.Presentations/A_exercise_EC_BE.Presentation.csproj" />
+    <Project Path="Apps/A_exercise_EC_BE.Applications/A_exercise_EC_BE.Applications.csproj" />
+    <Project Path="Apps/A_exercise_EC_BE.Domains/A_exercise_EC_BE.Domains.csproj" />
+    <Project Path="Apps/A_exercise_EC_BE.Infrastructures/A_exercise_EC_BE.Infrastructures.csproj" />
+    <Project Path="Apps/A_exercise_EC_BE.Presentations/A_exercise_EC_BE.Presentations.csproj" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="Tests/A_exercise_EC_BE.Presentation.Tests/A_exercise_EC_BE.Presentation.Tests.csproj" />
-    <Project Path="Tests/A_exercise_EC_BE.Application.Tests/A_exercise_EC_BE.Application.Tests.csproj" />
-    <Project Path="Tests/A_exercise_EC_BE.Domain.Tests/A_exercise_EC_BE.Domain.Tests.csproj" />
-    <Project Path="Tests/A_exercise_EC_BE.Infrastructure.Tests/A_exercise_EC_BE.Infrastructure.Tests.csproj" />
+    <Project Path="Tests/A_exercise_EC_BE.Applications.Tests/A_exercise_EC_BE.Applications.Tests.csproj" />
+    <Project Path="Tests/A_exercise_EC_BE.Domains.Tests/A_exercise_EC_BE.Domains.Tests.csproj" />
+    <Project Path="Tests/A_exercise_EC_BE.Infrastructures.Tests/A_exercise_EC_BE.Infrastructures.Tests.csproj" />
+    <Project Path="Tests/A_exercise_EC_BE.Presentations.Tests/A_exercise_EC_BE.Presentations.Tests.csproj" />
   </Folder>
 </Solution>

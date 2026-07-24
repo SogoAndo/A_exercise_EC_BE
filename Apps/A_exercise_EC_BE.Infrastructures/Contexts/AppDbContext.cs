@@ -1,7 +1,7 @@
-using A_exercise_EC_BE.Infrastructure.Entities;
+using A_exercise_EC_BE.Infrastructures.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace A_exercise_EC_BE.Infrastructure.Contexts;
+namespace A_exercise_EC_BE.Infrastructures.Contexts;
 
 /// <summary>
 /// 管理側と共有するPostgreSQLデータベースのコンテキスト。

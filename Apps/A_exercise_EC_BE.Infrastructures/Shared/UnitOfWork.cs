@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore.Storage;
-using A_exercise_EC_BE.Application.Usecases;
-using A_exercise_EC_BE.Infrastructure.Contexts;
-namespace A_exercise_EC_BE.Infrastructure.Shared;
+using A_exercise_EC_BE.Applications.Usecases;
+using A_exercise_EC_BE.Infrastructures.Contexts;
+namespace A_exercise_EC_BE.Infrastructures.Shared;
 /// <summary>
 /// Unit of Workパターンを利用したトランザクション制御インターフェイスの実装
 /// </summary>
