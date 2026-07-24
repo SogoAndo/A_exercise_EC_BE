@@ -1,8 +1,9 @@
+using A_exercise_EC_BE.Presentation.Configs;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddApplicationDependencies(builder.Configuration);
 builder.Services.AddOpenApi();
-builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -11,6 +12,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

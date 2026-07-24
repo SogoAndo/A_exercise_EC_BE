@@ -1,9 +1,14 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using A_exercise_EC_BE.Infrastructure.Contexts;
 using A_exercise_EC_BE.Infrastructure.Adapters;
 using A_exercise_EC_BE.Infrastructure.Repositories;
+using A_exercise_EC_BE.Infrastructure.Security;
 using A_exercise_EC_BE.Domain.Repositories;
 using A_exercise_EC_BE.Domain.Models;
 using A_exercise_EC_BE.Infrastructure.Shared;
@@ -11,6 +16,7 @@ using A_exercise_EC_BE.Application.Security;
 using A_exercise_EC_BE.Application.Usecases;
 using A_exercise_EC_BE.Application.Usecases.Customers;
 using A_exercise_EC_BE.Presentation.Adapters;
+using A_exercise_EC_BE.Presentation.Authentication;
 
 namespace A_exercise_EC_BE.Presentation.Configs;
 /// <summary>
@@ -68,9 +74,21 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<OrdersFactory>();
 
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+        services.AddScoped<
+            IPasswordHasher<CustomerPasswordContext>,
+            PasswordHasher<CustomerPasswordContext>>();
+        services.AddScoped<
+            ICustomerPasswordVerifier,
+            PBKDF2CustomerPasswordVerifier>();
+        services.AddScoped<
+            ICustomerAccessTokenIssuer,
+            CustomerJwtTokenIssuer>();
+        services.Configure<CustomerJwtOptions>(
+            config.GetSection(CustomerJwtOptions.SectionName));
 
         return services;
     }
@@ -83,6 +101,8 @@ public static class ApplicationDependencyExtensions
     {
         services.AddScoped<IPasswordHashingService, PasswordHashingService>();
         services.AddScoped<IRegisterCustomerAccountUsecase, RegisterCustomerAccountUsecase>();
+        services.AddScoped<ILoginCustomerUsecase, LoginCustomerUsecase>();
+
         return services;
     }
 
@@ -108,7 +128,40 @@ public static class ApplicationDependencyExtensions
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     return Task.CompletedTask;
                 };
-            });
+            })
+            .AddJwtBearer(
+                CustomerJwtAuthenticationDefaults.AuthenticationScheme,
+                _ => { });
+        services
+            .AddOptions<JwtBearerOptions>(
+                CustomerJwtAuthenticationDefaults.AuthenticationScheme)
+            .Configure<IOptions<CustomerJwtOptions>>(
+                (options, customerJwtOptions) =>
+                {
+                    var customerJwt = customerJwtOptions.Value;
+                    customerJwt.Validate();
+
+                    options.MapInboundClaims = false;
+                    options.TokenValidationParameters =
+                        new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidIssuer = customerJwt.Issuer,
+                            ValidateAudience = true,
+                            ValidAudience = customerJwt.Audience,
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKey = new SymmetricSecurityKey(
+                                Encoding.UTF8.GetBytes(
+                                    customerJwt.SigningKey)),
+                            ValidateLifetime = true,
+                            RequireExpirationTime = true,
+                            ClockSkew = TimeSpan.Zero,
+                            ValidAlgorithms =
+                            [
+                                SecurityAlgorithms.HmacSha256
+                            ]
+                        };
+                });
 
         services.AddAuthorization();
 
