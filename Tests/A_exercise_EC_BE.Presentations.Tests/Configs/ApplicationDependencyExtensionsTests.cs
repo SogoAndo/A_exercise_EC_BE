@@ -44,6 +44,19 @@ public class ApplicationDependencyExtensionsTests
     }
 
     [TestMethod]
+    public void BuildAppProvider_RegistersCustomerLogoutDependencies()
+    {
+        using var provider =
+            ApplicationDependencyExtensions.BuildAppProvider(
+                CreateConfiguration());
+        using var scope = provider.CreateScope();
+        var services = scope.ServiceProvider;
+
+        Assert.IsInstanceOfType<LogoutCustomerUsecase>(
+            services.GetRequiredService<ILogoutCustomerUsecase>());
+    }
+
+    [TestMethod]
     public async Task BuildAppProvider_ConfiguresCustomerJwtAuthentication()
     {
         using var provider =

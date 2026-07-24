@@ -109,6 +109,7 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<IPasswordHashingService, PasswordHashingService>();
         services.AddScoped<IRegisterCustomerAccountUsecase, RegisterCustomerAccountUsecase>();
         services.AddScoped<ILoginCustomerUsecase, LoginCustomerUsecase>();
+        services.AddScoped<ILogoutCustomerUsecase, LogoutCustomerUsecase>();
 
         return services;
     }
