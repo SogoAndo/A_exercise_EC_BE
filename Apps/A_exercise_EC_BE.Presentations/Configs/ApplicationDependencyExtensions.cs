@@ -17,6 +17,7 @@ using A_exercise_EC_BE.Applications.Usecases.Customers;
 using A_exercise_EC_BE.Applications.Usecases.Accounts;
 using A_exercise_EC_BE.Presentations.Adapters;
 using A_exercise_EC_BE.Presentations.Authentication;
+using A_exercise_EC_BE.Applications.Usecases.Products;
 
 namespace A_exercise_EC_BE.Presentations.Configs;
 /// <summary>
@@ -110,6 +111,7 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<IRegisterCustomerAccountUsecase, RegisterCustomerAccountUsecase>();
         services.AddScoped<ILoginCustomerUsecase, LoginCustomerUsecase>();
         services.AddScoped<ILogoutCustomerUsecase, LogoutCustomerUsecase>();
+        services.AddScoped<ISearchProductByCategoryUsecase, SearchProductByCategoryUsecase>();
 
         return services;
     }
