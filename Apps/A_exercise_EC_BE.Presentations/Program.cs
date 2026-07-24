@@ -1,5 +1,7 @@
+using A_exercise_EC_BE.Presentations.Authentication;
 using A_exercise_EC_BE.Presentations.Configs;
 using A_exercise_EC_BE.Presentations.Middleware;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +15,21 @@ builder.Services.AddApplicationDependencies(
 // Swagger生成に必要なサービスを登録する
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(
+    options =>
+    {
+        options.AddSecurityDefinition(
+            CustomerJwtAuthenticationDefaults.AuthenticationScheme,
+            new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description =
+                    "POST /loginで取得したaccessTokenを入力してください。"
+            });
+        options.OperationFilter<CustomerJwtAuthorizeOperationFilter>();
+    });
 
 var app = builder.Build();
 
