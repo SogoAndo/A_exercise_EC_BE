@@ -1,7 +1,7 @@
 <Solution>
   <Folder Name="/Apps/">
     <Project Path="Apps/A_exercise_EC_BE.Presentation/A_exercise_EC_BE.Presentation.csproj" />
-    <Project Path="Apps/A_exercise_EC_BE.Application/A_exercise_EC_BE.Application.csproj" />
+    <Project Path="Apps/A_exercise_EC_BE.Applications/A_exercise_EC_BE.Application.csproj" />
     <Project Path="Apps/A_exercise_EC_BE.Domain/A_exercise_EC_BE.Domain.csproj" />
     <Project Path="Apps/A_exercise_EC_BE.Infrastructure/A_exercise_EC_BE.Infrastructure.csproj" />
   </Folder>

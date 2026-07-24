@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\A_exercise_EC_BE.Domain\A_exercise_EC_BE.Domain.csproj" />
-    <ProjectReference Include="..\A_exercise_EC_BE.Application\A_exercise_EC_BE.Application.csproj" />
+    <ProjectReference Include="..\A_exercise_EC_BE.Applications\A_exercise_EC_BE.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-namespace A_exercise_EC_BE.Application.Usecases;
+namespace A_exercise_EC_BE.Applications.Usecases;
 /// <summary>
 /// Unit of Workパターンを利用したトランザクション制御インターフェイス
 /// </summary>

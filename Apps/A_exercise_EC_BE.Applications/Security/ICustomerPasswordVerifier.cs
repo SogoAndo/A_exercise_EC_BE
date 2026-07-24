@@ -1,4 +1,4 @@
-namespace A_exercise_EC_BE.Application.Security;
+namespace A_exercise_EC_BE.Applications.Security;
 
 /// <summary>
 /// UC002で顧客パスワードを検証するためのインターフェース。

@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Security.Cryptography;
-using A_exercise_EC_BE.Application.Security;
+using A_exercise_EC_BE.Applications.Security;
 
-namespace A_exercise_EC_BE.Application.Security;
+namespace A_exercise_EC_BE.Applications.Security;
 
 /// <summary>
 /// PBKDF2を使用してパスワードの

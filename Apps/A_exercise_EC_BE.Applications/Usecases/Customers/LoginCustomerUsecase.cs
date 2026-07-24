@@ -1,9 +1,9 @@
 using System.Net.Mail;
-using A_exercise_EC_BE.Application.Security;
+using A_exercise_EC_BE.Applications.Security;
 using A_exercise_EC_BE.Domain.Exceptions;
 using A_exercise_EC_BE.Domain.Repositories;
 
-namespace A_exercise_EC_BE.Application.Usecases.Customers;
+namespace A_exercise_EC_BE.Applications.Usecases.Customers;
 
 /// <summary>
 /// UC002 顧客ログインUseCase。
