@@ -18,6 +18,7 @@ using A_exercise_EC_BE.Applications.Usecases.Accounts;
 using A_exercise_EC_BE.Presentations.Adapters;
 using A_exercise_EC_BE.Presentations.Authentication;
 using A_exercise_EC_BE.Applications.Usecases.Products;
+using A_exercise_EC_BE.Applications.Usecases.Purchases;
 
 namespace A_exercise_EC_BE.Presentations.Configs;
 /// <summary>
@@ -76,6 +77,7 @@ public static class ApplicationDependencyExtensions
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -112,6 +114,9 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<ILoginCustomerUsecase, LoginCustomerUsecase>();
         services.AddScoped<ILogoutCustomerUsecase, LogoutCustomerUsecase>();
         services.AddScoped<ISearchProductByCategoryUsecase, SearchProductByCategoryUsecase>();
+        services.AddScoped<
+            ISearchPurchaseHistoryUsecase,
+            SearchPurchaseHistoryUsecase>();
 
         return services;
     }
@@ -166,6 +171,7 @@ public static class ApplicationDependencyExtensions
 
         // RegisterBookViewModelからドメインオブジェクト:Bookへ変換するアダプタ
         services.AddScoped<RegisterCustomerAccountViewModelAdapter>();
+        services.AddScoped<PurchaseHistoryViewModelAdapter>();
         return services;
     }
 
