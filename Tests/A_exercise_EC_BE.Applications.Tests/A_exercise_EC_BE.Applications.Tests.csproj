@@ -23,8 +23,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Apps\A_exercise_EC_BE.Applications\A_exercise_EC_BE.Applications.csproj" />
     <ProjectReference Include="..\..\Apps\A_exercise_EC_BE.Domains\A_exercise_EC_BE.Domains.csproj" />
-    <ProjectReference Include="..\..\Apps\A_exercise_EC_BE.Domain\A_exercise_EC_BE.Infrastructures.csproj" />
-    <ProjectReference Include="..\..\Apps\A_exercise_EC_BE.Domain\A_exercise_EC_BE.Presentations.csproj" />
+    <ProjectReference Include="..\..\Apps\A_exercise_EC_BE.Infrastructures\A_exercise_EC_BE.Infrastructures.csproj" />
+    <ProjectReference Include="..\..\Apps\A_exercise_EC_BE.Presentations\A_exercise_EC_BE.Presentations.csproj" />
   </ItemGroup>
 
 </Project>
