@@ -5,10 +5,11 @@ using A_exercise_EC_BE.Infrastructures.Adapters;
 using A_exercise_EC_BE.Infrastructures.Contexts;
 using A_exercise_EC_BE.Infrastructures.Entities;
 using A_exercise_EC_BE.Infrastructures.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using A_exercise_EC_BE.Presentations.Configs;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace A_exercise_EC_BE.Infrastructures.Tests.Repositories;
 
@@ -37,9 +38,6 @@ public class CustomerRepositoryTests
 
     /// <summary>
     /// ServiceProvider。
-    ///
-    /// ProductRepositoryTestsで使用している
-    /// providerを共通化できる場合はそちらを使用してください。
     /// </summary>
     private static ServiceProvider provider = null!;
 
@@ -50,18 +48,24 @@ public class CustomerRepositoryTests
     public static void ClassInitialize(
         TestContext testContext)
     {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile(
-                "appsettings.json",
-                optional: false)
-            .AddJsonFile(
-                "appsettings.json",
-                optional: true)
-            .AddEnvironmentVariables()
-            .Build();
+        _ = testContext;
 
-        provider = ApplicationDependencyExtensions.BuildAppProvider(config);
+        var config =
+            new ConfigurationBuilder()
+                .SetBasePath(
+                    AppContext.BaseDirectory)
+                .AddJsonFile(
+                    "appsettings.json",
+                    optional: false)
+                .AddJsonFile(
+                    "appsettings.Test.json",
+                    optional: true)
+                .AddEnvironmentVariables()
+                .Build();
+
+        provider =
+            ApplicationDependencyExtensions
+                .BuildAppProvider(config);
     }
 
     /// <summary>
@@ -84,11 +88,13 @@ public class CustomerRepositoryTests
 
         repository =
             scope.ServiceProvider
-                .GetRequiredService<ICustomerRepository>();
+                .GetRequiredService<
+                    ICustomerRepository>();
 
         dbContext =
             scope.ServiceProvider
-                .GetRequiredService<AppDbContext>();
+                .GetRequiredService<
+                    AppDbContext>();
     }
 
     /// <summary>
@@ -105,7 +111,8 @@ public class CustomerRepositoryTests
      */
 
     /// <summary>
-    /// 存在するメールアドレスで顧客を取得できることを確認する。
+    /// 存在するメールアドレスで
+    /// 顧客を取得できることを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -117,11 +124,15 @@ public class CustomerRepositoryTests
         var customerUuid =
             Guid.NewGuid();
 
-        var mailAddress =
-            $"find@example.com";
-
         var username =
-            $"find";
+            CreateUniqueUsername(
+                "find",
+                customerUuid);
+
+        var mailAddress =
+            CreateUniqueMailAddress(
+                "find",
+                customerUuid);
 
         var entity =
             CreateCustomerEntity(
@@ -129,13 +140,14 @@ public class CustomerRepositoryTests
                 username,
                 mailAddress);
 
-        dbContext.Customers.Add(
-            entity);
-
-        await dbContext.SaveChangesAsync();
-
         try
         {
+            dbContext.Customers.Add(
+                entity);
+
+            await dbContext
+                .SaveChangesAsync();
+
             // Act
             var result =
                 await repository
@@ -145,6 +157,10 @@ public class CustomerRepositoryTests
             // Assert
             Assert.IsNotNull(
                 result);
+
+            Assert.AreEqual(
+                customerUuid,
+                result.CustomerUuid);
 
             Assert.AreEqual(
                 mailAddress,
@@ -162,7 +178,8 @@ public class CustomerRepositoryTests
     }
 
     /// <summary>
-    /// 存在しないメールアドレスでnullが返ることを確認する。
+    /// 存在しないメールアドレスで
+    /// nullが返ることを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -172,7 +189,9 @@ public class CustomerRepositoryTests
     {
         // Arrange
         var mailAddress =
-            $"not-exist-{Guid.NewGuid():N}@example.com";
+            CreateUniqueMailAddress(
+                "notfound",
+                Guid.NewGuid());
 
         // Act
         var result =
@@ -186,7 +205,8 @@ public class CustomerRepositoryTests
     }
 
     /// <summary>
-    /// DB接続エラー時にInternalExceptionが発生することを確認する。
+    /// DB接続エラー時にInternalExceptionが
+    /// 発生することを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -196,7 +216,8 @@ public class CustomerRepositoryTests
     {
         // Arrange
         var options =
-            new DbContextOptionsBuilder<AppDbContext>()
+            new DbContextOptionsBuilder<
+                AppDbContext>()
                 .UseNpgsql(
                     "Host=localhost;"
                     + "Port=9999;"
@@ -210,21 +231,29 @@ public class CustomerRepositoryTests
 
         var adapter =
             scope.ServiceProvider
-                .GetRequiredService<CustomerEntityAdapter>();
+                .GetRequiredService<
+                    CustomerEntityAdapter>();
 
         var errorRepository =
             new CustomerRepository(
                 context,
                 adapter);
 
-        // Act & Assert
-        await Assert.ThrowsExactlyAsync<InternalException>(
-            async () =>
-            {
-                await errorRepository
-                    .FindByMailAddressAsync(
-                        "error@example.com");
-            });
+        // Act
+        var exception =
+            await Assert
+                .ThrowsExactlyAsync<
+                    InternalException>(
+                    async () =>
+                    {
+                        await errorRepository
+                            .FindByMailAddressAsync(
+                                "error@example.com");
+                    });
+
+        // Assert
+        Assert.IsNotNull(
+            exception);
     }
 
     /*
@@ -232,7 +261,8 @@ public class CustomerRepositoryTests
      */
 
     /// <summary>
-    /// 存在するアカウント名でtrueが返ることを確認する。
+    /// 存在するアカウント名で
+    /// trueが返ることを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -245,10 +275,14 @@ public class CustomerRepositoryTests
             Guid.NewGuid();
 
         var username =
-            $"exists-user";
+            CreateUniqueUsername(
+                "exists",
+                customerUuid);
 
         var mailAddress =
-            $"exists-user-{customerUuid:N}@example.com";
+            CreateUniqueMailAddress(
+                "exists-user",
+                customerUuid);
 
         var entity =
             CreateCustomerEntity(
@@ -256,13 +290,14 @@ public class CustomerRepositoryTests
                 username,
                 mailAddress);
 
-        dbContext.Customers.Add(
-            entity);
-
-        await dbContext.SaveChangesAsync();
-
         try
         {
+            dbContext.Customers.Add(
+                entity);
+
+            await dbContext
+                .SaveChangesAsync();
+
             // Act
             var result =
                 await repository
@@ -281,7 +316,8 @@ public class CustomerRepositoryTests
     }
 
     /// <summary>
-    /// 存在しないアカウント名でfalseが返ることを確認する。
+    /// 存在しないアカウント名で
+    /// falseが返ることを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -291,7 +327,9 @@ public class CustomerRepositoryTests
     {
         // Arrange
         var username =
-            $"not-exist";
+            CreateUniqueUsername(
+                "none",
+                Guid.NewGuid());
 
         // Act
         var result =
@@ -305,7 +343,8 @@ public class CustomerRepositoryTests
     }
 
     /// <summary>
-    /// DB接続エラー時にInternalExceptionが発生することを確認する。
+    /// DB接続エラー時にInternalExceptionが
+    /// 発生することを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -315,7 +354,8 @@ public class CustomerRepositoryTests
     {
         // Arrange
         var options =
-            new DbContextOptionsBuilder<AppDbContext>()
+            new DbContextOptionsBuilder<
+                AppDbContext>()
                 .UseNpgsql(
                     "Host=localhost;"
                     + "Port=9999;"
@@ -329,21 +369,29 @@ public class CustomerRepositoryTests
 
         var adapter =
             scope.ServiceProvider
-                .GetRequiredService<CustomerEntityAdapter>();
+                .GetRequiredService<
+                    CustomerEntityAdapter>();
 
         var errorRepository =
             new CustomerRepository(
                 context,
                 adapter);
 
-        // Act & Assert
-        await Assert.ThrowsExactlyAsync<InternalException>(
-            async () =>
-            {
-                await errorRepository
-                    .ExistsByUsernameAsync(
-                        "database-error-user");
-            });
+        // Act
+        var exception =
+            await Assert
+                .ThrowsExactlyAsync<
+                    InternalException>(
+                    async () =>
+                    {
+                        await errorRepository
+                            .ExistsByUsernameAsync(
+                                "database-error-user");
+                    });
+
+        // Assert
+        Assert.IsNotNull(
+            exception);
     }
 
     /*
@@ -351,7 +399,8 @@ public class CustomerRepositoryTests
      */
 
     /// <summary>
-    /// 存在するメールアドレスでtrueが返ることを確認する。
+    /// 存在するメールアドレスで
+    /// trueが返ることを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -364,10 +413,14 @@ public class CustomerRepositoryTests
             Guid.NewGuid();
 
         var username =
-            $"exists-mail";
+            CreateUniqueUsername(
+                "mail",
+                customerUuid);
 
         var mailAddress =
-            $"exists-mail@example.com";
+            CreateUniqueMailAddress(
+                "exists-mail",
+                customerUuid);
 
         var entity =
             CreateCustomerEntity(
@@ -375,13 +428,14 @@ public class CustomerRepositoryTests
                 username,
                 mailAddress);
 
-        dbContext.Customers.Add(
-            entity);
-
-        await dbContext.SaveChangesAsync();
-
         try
         {
+            dbContext.Customers.Add(
+                entity);
+
+            await dbContext
+                .SaveChangesAsync();
+
             // Act
             var result =
                 await repository
@@ -400,7 +454,8 @@ public class CustomerRepositoryTests
     }
 
     /// <summary>
-    /// 存在しないメールアドレスでfalseが返ることを確認する。
+    /// 存在しないメールアドレスで
+    /// falseが返ることを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -410,7 +465,9 @@ public class CustomerRepositoryTests
     {
         // Arrange
         var mailAddress =
-            $"not-exist-{Guid.NewGuid():N}@example.com";
+            CreateUniqueMailAddress(
+                "notfound",
+                Guid.NewGuid());
 
         // Act
         var result =
@@ -424,7 +481,8 @@ public class CustomerRepositoryTests
     }
 
     /// <summary>
-    /// DB接続エラー時にInternalExceptionが発生することを確認する。
+    /// DB接続エラー時にInternalExceptionが
+    /// 発生することを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -434,7 +492,8 @@ public class CustomerRepositoryTests
     {
         // Arrange
         var options =
-            new DbContextOptionsBuilder<AppDbContext>()
+            new DbContextOptionsBuilder<
+                AppDbContext>()
                 .UseNpgsql(
                     "Host=localhost;"
                     + "Port=9999;"
@@ -448,21 +507,29 @@ public class CustomerRepositoryTests
 
         var adapter =
             scope.ServiceProvider
-                .GetRequiredService<CustomerEntityAdapter>();
+                .GetRequiredService<
+                    CustomerEntityAdapter>();
 
         var errorRepository =
             new CustomerRepository(
                 context,
                 adapter);
 
-        // Act & Assert
-        await Assert.ThrowsExactlyAsync<InternalException>(
-            async () =>
-            {
-                await errorRepository
-                    .ExistsByMailAddressAsync(
-                        "database-error@example.com");
-            });
+        // Act
+        var exception =
+            await Assert
+                .ThrowsExactlyAsync<
+                    InternalException>(
+                    async () =>
+                    {
+                        await errorRepository
+                            .ExistsByMailAddressAsync(
+                                "database-error@example.com");
+                    });
+
+        // Assert
+        Assert.IsNotNull(
+            exception);
     }
 
     /*
@@ -470,7 +537,8 @@ public class CustomerRepositoryTests
      */
 
     /// <summary>
-    /// 顧客アカウントを正常に登録できることを確認する。
+    /// 顧客アカウントを正常に
+    /// 登録できることを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -483,10 +551,14 @@ public class CustomerRepositoryTests
             Guid.NewGuid();
 
         var username =
-            $"create";
+            CreateUniqueUsername(
+                "create",
+                customerUuid);
 
         var mailAddress =
-            $"create@example.com";
+            CreateUniqueMailAddress(
+                "create",
+                customerUuid);
 
         var customer =
             CreateCustomer(
@@ -497,8 +569,8 @@ public class CustomerRepositoryTests
         try
         {
             // Act
-            await repository.CreateAsync(
-                customer);
+            await repository
+                .CreateAsync(customer);
 
             // Assert
             var saved =
@@ -511,6 +583,10 @@ public class CustomerRepositoryTests
 
             Assert.IsNotNull(
                 saved);
+
+            Assert.AreEqual(
+                customerUuid,
+                saved.CustomerUuid);
 
             Assert.AreEqual(
                 username,
@@ -528,7 +604,8 @@ public class CustomerRepositoryTests
     }
 
     /// <summary>
-    /// DB接続エラー時にInternalExceptionが発生することを確認する。
+    /// DB接続エラー時にInternalExceptionが
+    /// 発生することを確認する。
     /// </summary>
     [TestMethod(
         DisplayName =
@@ -538,7 +615,8 @@ public class CustomerRepositoryTests
     {
         // Arrange
         var options =
-            new DbContextOptionsBuilder<AppDbContext>()
+            new DbContextOptionsBuilder<
+                AppDbContext>()
                 .UseNpgsql(
                     "Host=localhost;"
                     + "Port=9999;"
@@ -552,7 +630,8 @@ public class CustomerRepositoryTests
 
         var adapter =
             scope.ServiceProvider
-                .GetRequiredService<CustomerEntityAdapter>();
+                .GetRequiredService<
+                    CustomerEntityAdapter>();
 
         var errorRepository =
             new CustomerRepository(
@@ -562,19 +641,36 @@ public class CustomerRepositoryTests
         var customerUuid =
             Guid.NewGuid();
 
+        var username =
+            CreateUniqueUsername(
+                "dberr",
+                customerUuid);
+
+        var mailAddress =
+            CreateUniqueMailAddress(
+                "db-error",
+                customerUuid);
+
         var customer =
             CreateCustomer(
                 customerUuid,
-                $"db-error",
-                $"db-error-{customerUuid:N}@example.com");
+                username,
+                mailAddress);
 
-        // Act & Assert
-        await Assert.ThrowsExactlyAsync<InternalException>(
-            async () =>
-            {
-                await errorRepository
-                    .CreateAsync(customer);
-            });
+        // Act
+        var exception =
+            await Assert
+                .ThrowsExactlyAsync<
+                    InternalException>(
+                    async () =>
+                    {
+                        await errorRepository
+                            .CreateAsync(customer);
+                    });
+
+        // Assert
+        Assert.IsNotNull(
+            exception);
     }
 
     /*
@@ -582,12 +678,38 @@ public class CustomerRepositoryTests
      */
 
     /// <summary>
+    /// テスト用の一意なアカウント名を生成する。
+    /// </summary>
+    private static string CreateUniqueUsername(
+        string prefix,
+        Guid customerUuid)
+    {
+        var suffix =
+            customerUuid
+                .ToString("N")[..12];
+
+        return $"{prefix}{suffix}";
+    }
+
+    /// <summary>
+    /// テスト用の一意なメールアドレスを生成する。
+    /// </summary>
+    private static string CreateUniqueMailAddress(
+        string prefix,
+        Guid customerUuid)
+    {
+        return
+            $"{prefix}-{customerUuid:N}@example.com";
+    }
+
+    /// <summary>
     /// テスト用のCustomerEntityを生成する。
     /// </summary>
-    private static CustomerEntity CreateCustomerEntity(
-        Guid customerUuid,
-        string username,
-        string mailAddress)
+    private static CustomerEntity
+        CreateCustomerEntity(
+            Guid customerUuid,
+            string username,
+            string mailAddress)
     {
         return new CustomerEntity
         {
@@ -619,7 +741,8 @@ public class CustomerRepositoryTests
                 "test-password-hash",
 
             CreatedAt =
-                DateTime.Now.AddMinutes(-1)
+                DateTime.Now
+                    .AddMinutes(-1)
         };
     }
 
@@ -650,21 +773,25 @@ public class CustomerRepositoryTests
     private async Task DeleteCustomerAsync(
         Guid customerUuid)
     {
-        var entity =
-            await dbContext.Customers
-                .SingleOrDefaultAsync(
-                    customer =>
-                        customer.CustomerUuid
-                        == customerUuid);
+        /*
+         * SaveChangesAsyncで失敗した場合でも
+         * Added状態のEntityを残さないようにする。
+         */
+        dbContext
+            .ChangeTracker
+            .Clear();
 
-        if (entity is null)
-        {
-            return;
-        }
-
-        dbContext.Customers.Remove(
-            entity);
-
-        await dbContext.SaveChangesAsync();
+        /*
+         * Entityを追跡せず、
+         * CustomerUuidを条件に直接削除する。
+         *
+         * 対象が存在しない場合も例外にはならない。
+         */
+        await dbContext.Customers
+            .Where(
+                customer =>
+                    customer.CustomerUuid
+                    == customerUuid)
+            .ExecuteDeleteAsync();
     }
 }
