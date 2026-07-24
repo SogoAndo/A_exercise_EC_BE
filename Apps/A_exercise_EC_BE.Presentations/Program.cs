@@ -1,4 +1,5 @@
 using A_exercise_EC_BE.Presentations.Configs;
+using A_exercise_EC_BE.Presentations.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,9 @@ if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
+
+// APIで発生した例外を共通のエラーレスポンスへ変換する
+app.UseMiddleware<ApiExceptionMiddleware>();
 
 // JWT認証を実装するときに追加する
 app.UseAuthentication();
