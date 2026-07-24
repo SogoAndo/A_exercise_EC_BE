@@ -54,12 +54,22 @@ public class ApplicationDependencyExtensionsTests
 
         var scheme = await schemeProvider.GetSchemeAsync(
             CustomerJwtAuthenticationDefaults.AuthenticationScheme);
+        var defaultAuthenticateScheme =
+            await schemeProvider.GetDefaultAuthenticateSchemeAsync();
+        var defaultChallengeScheme =
+            await schemeProvider.GetDefaultChallengeSchemeAsync();
         var options = provider
             .GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
             .Get(CustomerJwtAuthenticationDefaults.AuthenticationScheme);
         var validation = options.TokenValidationParameters;
 
         Assert.IsNotNull(scheme);
+        Assert.AreEqual(
+            CustomerJwtAuthenticationDefaults.AuthenticationScheme,
+            defaultAuthenticateScheme?.Name);
+        Assert.AreEqual(
+            CustomerJwtAuthenticationDefaults.AuthenticationScheme,
+            defaultChallengeScheme?.Name);
         Assert.AreEqual(Issuer, validation.ValidIssuer);
         Assert.AreEqual(Audience, validation.ValidAudience);
         Assert.AreEqual(TimeSpan.Zero, validation.ClockSkew);

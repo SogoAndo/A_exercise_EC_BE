@@ -1,6 +1,5 @@
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -117,19 +116,8 @@ public static class ApplicationDependencyExtensions
         services.AddControllers();
 
         services
-            .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(options =>
-            {
-                options.Cookie.Name = "FullnessAdminAuth";
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-                options.SlidingExpiration = true;
-                options.LoginPath = "/admin/login";
-                options.Events.OnRedirectToLogin = context =>
-                {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    return Task.CompletedTask;
-                };
-            })
+            .AddAuthentication(
+                CustomerJwtAuthenticationDefaults.AuthenticationScheme)
             .AddJwtBearer(
                 CustomerJwtAuthenticationDefaults.AuthenticationScheme,
                 _ => { });
