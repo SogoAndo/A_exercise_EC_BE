@@ -66,19 +66,23 @@ public class PBKDF2CustomerPasswordVerifierTests
     [TestMethod]
     [DataRow("")]
     [DataRow("   ")]
-    public void Verify_WithoutPasswordHash_ThrowsDomainException(string passwordHash)
+    public void Verify_WithoutPasswordHash_PerformsDummyHashVerificationAndReturnsFalse(
+        string passwordHash)
     {
         var passwordHashingServiceMock = CreatePasswordHashingServiceMock();
         var verifier = new PBKDF2CustomerPasswordVerifier(
             passwordHashingServiceMock.Object);
 
-        Assert.ThrowsExactly<DomainException>(
-            () => verifier.Verify(passwordHash, "Password123"));
+        var result = verifier.Verify(
+            passwordHash,
+            "Password123");
+
+        Assert.IsFalse(result);
         passwordHashingServiceMock.Verify(
             service => service.Verify(
-                It.IsAny<string>(),
-                It.IsAny<string>()),
-            Times.Never);
+                "Password123",
+                "dummy-password-hash"),
+            Times.Once);
     }
 
     [TestMethod]

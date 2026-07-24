@@ -22,11 +22,6 @@ public sealed class PBKDF2CustomerPasswordVerifier : ICustomerPasswordVerifier
 
     public bool Verify(string? passwordHash, string providedPassword)
     {
-        if (passwordHash is not null && string.IsNullOrWhiteSpace(passwordHash))
-        {
-            throw new DomainException("パスワードハッシュは必須です。");
-        }
-
         if (string.IsNullOrWhiteSpace(providedPassword))
         {
             throw new DomainException("パスワードは必須です。");
@@ -34,7 +29,9 @@ public sealed class PBKDF2CustomerPasswordVerifier : ICustomerPasswordVerifier
 
         return _passwordHashingService.Verify(
             providedPassword,
-            passwordHash ?? _dummyPasswordHash);
+            string.IsNullOrWhiteSpace(passwordHash)
+                ? _dummyPasswordHash
+                : passwordHash);
     }
 }
 
