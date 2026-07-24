@@ -291,7 +291,7 @@ var assemblies = [
     "name": "A_exercise_EC_BE.Applications",
     "classes": [
       { "name": "A_exercise_EC_BE.Applications.Security.CustomerAccessToken", "rp": "A_exercise_EC_BE.Applications_CustomerAccessToken.html", "cl": 3, "ucl": 0, "cal": 3, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "A_exercise_EC_BE.Applications.Security.PasswordHashingService", "rp": "A_exercise_EC_BE.Applications_PasswordHashingService.html", "cl": 63, "ucl": 17, "cal": 80, "tl": 156, "cb": 12, "tb": 22, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "A_exercise_EC_BE.Applications.Security.PasswordHashingService", "rp": "A_exercise_EC_BE.Applications_PasswordHashingService.html", "cl": 80, "ucl": 0, "cal": 80, "tl": 156, "cb": 22, "tb": 22, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "A_exercise_EC_BE.Applications.Usecases.Accounts.RegisterCustomerAccountUsecase", "rp": "A_exercise_EC_BE.Applications_RegisterCustomerAccountUsecase.html", "cl": 86, "ucl": 0, "cal": 86, "tl": 181, "cb": 18, "tb": 18, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "A_exercise_EC_BE.Applications.Usecases.Customers.CustomerLoginRequest", "rp": "A_exercise_EC_BE.Applications_CustomerLoginRequest.html", "cl": 3, "ucl": 0, "cal": 3, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "A_exercise_EC_BE.Applications.Usecases.Customers.CustomerLoginResult", "rp": "A_exercise_EC_BE.Applications_CustomerLoginResult.html", "cl": 4, "ucl": 0, "cal": 4, "tl": 9, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -299,6 +299,7 @@ var assemblies = [
       { "name": "A_exercise_EC_BE.Applications.Usecases.Customers.LoginCustomerUsecase", "rp": "A_exercise_EC_BE.Applications_LoginCustomerUsecase.html", "cl": 48, "ucl": 0, "cal": 48, "tl": 84, "cb": 20, "tb": 20, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "A_exercise_EC_BE.Applications.Usecases.Customers.LogoutCustomerUsecase", "rp": "A_exercise_EC_BE.Applications_LogoutCustomerUsecase.html", "cl": 2, "ucl": 0, "cal": 2, "tl": 12, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "A_exercise_EC_BE.Applications.Usecases.Products.SearchProductByCategoryUsecase", "rp": "A_exercise_EC_BE.Applications_SearchProductByCategoryUsecase.html", "cl": 13, "ucl": 0, "cal": 13, "tl": 31, "cb": 4, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "A_exercise_EC_BE.Applications.Usecases.Purchases.PurchaseAmountCalculator", "rp": "A_exercise_EC_BE.Applications_PurchaseAmountCalculator.html", "cl": 27, "ucl": 0, "cal": 27, "tl": 59, "cb": 8, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
   {
     "name": "A_exercise_EC_BE.Domains",
@@ -374,7 +375,7 @@ var riskHotspots = [
   {
     "assembly": "A_exercise_EC_BE.Applications", "class": "A_exercise_EC_BE.Applications.Security.PasswordHashingService", "reportPath": "A_exercise_EC_BE.Applications_PasswordHashingService.html", "methodName": "Verify(System.String,System.String)", "methodShortName": "Verify(...)", "fileIndex": 0, "line": 80,
     "metrics": [
-      { "value": 25, "exceeded": false },
+      { "value": 20, "exceeded": false },
       { "value": 20, "exceeded": true },
     ]},
 ];
