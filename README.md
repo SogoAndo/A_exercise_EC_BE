@@ -13,10 +13,10 @@ Fullness Stationery社の顧客向けECサービス用バックエンドです�
 
 ```text
 Apps/
-  A_exercise_EC_BE.Domain/
-  A_exercise_EC_BE.Application/
-  A_exercise_EC_BE.Infrastructure/
-  A_exercise_EC_BE.Presentation/
+  A_exercise_EC_BE.Domains/
+  A_exercise_EC_BE.Applications/
+  A_exercise_EC_BE.Infrastructures/
+  A_exercise_EC_BE.Presentations/
 Tests/
   A_exercise_EC_BE.Domains.Tests/
   A_exercise_EC_BE.Applications.Tests/

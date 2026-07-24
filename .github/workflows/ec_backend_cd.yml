@@ -72,12 +72,12 @@ jobs:
     env:
       # 顧客バックエンドのWeb APIプロジェクト
       # 実際のリポジトリ構造：
-      # A_exercise_EC_BE/Apps/A_exercise_EC_BE.Presentation/
+      # A_exercise_EC_BE/Apps/A_exercise_EC_BE.Presentations/
       PROJECT_PATH: >-
-        A_exercise_EC_BE/Apps/A_exercise_EC_BE.Presentation/A_exercise_EC_BE.Presentation.csproj
+        A_exercise_EC_BE/Apps/A_exercise_EC_BE.Presentations/A_exercise_EC_BE.Presentations.csproj
 
       # dotnet publish後に生成される起動DLL
-      APP_DLL: A_exercise_EC_BE.Presentation.dll
+      APP_DLL: A_exercise_EC_BE.Presentations.dll
 
       # Azure VM上の顧客バックエンド専用配置先
       DEPLOY_DIR: /var/www/fullness-ec-api
