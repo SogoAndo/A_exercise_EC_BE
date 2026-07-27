@@ -6,6 +6,7 @@ namespace A_exercise_EC_BE.Presentations.ViewModels.Purchases;
 public sealed record PurchaseHistoryDetailViewModel(
     Guid OrderUuid,
     string OrderDate,
-    string OrderStatus,
+    int OrderStatusId,
+    string OrderStatusName,
     List<CartItemViewModel> OrderItems,
     int TotalPrice);

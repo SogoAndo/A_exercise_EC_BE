@@ -46,6 +46,7 @@ public sealed class PurchaseHistoryViewModelAdapter
         return new PurchaseHistoryDetailViewModel(
             order.OrderUuid,
             FormatOrderDate(order.OrderDate),
+            order.OrderStatus.Id,
             order.OrderStatus.Name,
             order.OrdersDetails
                 .Select(ConvertToOrderItemViewModel)

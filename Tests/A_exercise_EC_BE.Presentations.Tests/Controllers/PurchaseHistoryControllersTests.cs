@@ -43,6 +43,9 @@ public class PurchaseHistoryControllersTests
         Assert.AreEqual(
             order.OrderUuid,
             response.OrderList[0].OrderUuid);
+        Assert.AreEqual(
+            order.OrderStatus.Name,
+            response.OrderList[0].OrderStatus);
         Assert.IsNull(response.Message);
         usecase.Verify(
             x => x.SearchAsync(customerUuid),
@@ -101,6 +104,12 @@ public class PurchaseHistoryControllersTests
         Assert.IsNotNull(response);
         Assert.AreEqual(order.OrderUuid, response.OrderUuid);
         Assert.AreEqual(order.AmountTotal, response.TotalPrice);
+        Assert.AreEqual(
+            order.OrderStatus.Id,
+            response.OrderStatusId);
+        Assert.AreEqual(
+            order.OrderStatus.Name,
+            response.OrderStatusName);
         Assert.HasCount(1, response.OrderItems);
         Assert.AreEqual(200, response.OrderItems[0].Subtotal);
     }
