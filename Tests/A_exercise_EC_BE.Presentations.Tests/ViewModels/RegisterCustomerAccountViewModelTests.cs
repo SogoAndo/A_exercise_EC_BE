@@ -121,12 +121,12 @@ public class RegisterCustomerAccountViewModelTest
     [TestMethod]
     [DataRow(
         nameof(RegisterCustomerAccountViewModel.Name),
-        "顧客名を入力してください",
+        "氏名を入力してください",
         DisplayName =
             "Nameが空文字の場合は必須入力エラーになる")]
     [DataRow(
         nameof(RegisterCustomerAccountViewModel.Kana),
-        "顧客名カナを入力してください",
+        "氏名カナを入力してください",
         DisplayName =
             "Kanaが空文字の場合は必須入力エラーになる")]
     [DataRow(
@@ -187,13 +187,13 @@ public class RegisterCustomerAccountViewModelTest
     [DataRow(
         nameof(RegisterCustomerAccountViewModel.Name),
         "山",
-        "顧客名は2文字以上20文字以内で入力してください",
+        "氏名は2文字以上20文字以内で入力してください",
         DisplayName =
             "Nameが2文字未満の場合は文字数エラーになる")]
     [DataRow(
         nameof(RegisterCustomerAccountViewModel.Kana),
         "ヤ",
-        "顧客名カナは2文字以上20文字以内で入力してください",
+        "氏名カナは2文字以上20文字以内で入力してください",
         DisplayName =
             "Kanaが2文字未満の場合は文字数エラーになる")]
     [DataRow(
@@ -248,13 +248,13 @@ public class RegisterCustomerAccountViewModelTest
     [DataRow(
         nameof(RegisterCustomerAccountViewModel.Name),
         21,
-        "顧客名は2文字以上20文字以内で入力してください",
+        "氏名は2文字以上20文字以内で入力してください",
         DisplayName =
             "Nameが20文字を超える場合は文字数エラーになる")]
     [DataRow(
         nameof(RegisterCustomerAccountViewModel.Kana),
         21,
-        "顧客名カナは2文字以上20文字以内で入力してください",
+        "氏名カナは2文字以上20文字以内で入力してください",
         DisplayName =
             "Kanaが20文字を超える場合は文字数エラーになる")]
     [DataRow(
