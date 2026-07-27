@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 
 namespace A_exercise_EC_BE.Presentations.ViewModels.Accounts;
 
@@ -12,12 +13,12 @@ public class RegisterCustomerAccountViewModel
     /// </summary>
     [Required(
         ErrorMessage =
-            "顧客名を入力してください")]
+            "氏名を入力してください")]
     [StringLength(
         20,
         MinimumLength = 2,
         ErrorMessage =
-            "顧客名は2文字以上20文字以内で入力してください")]
+            "氏名は2文字以上20文字以内で入力してください")]
     public string Name { get; set; } =
         string.Empty;
 
@@ -26,12 +27,16 @@ public class RegisterCustomerAccountViewModel
     /// </summary>
     [Required(
         ErrorMessage =
-            "顧客名カナを入力してください")]
+            "氏名カナを入力してください")]
     [StringLength(
         20,
         MinimumLength = 2,
         ErrorMessage =
-            "顧客名カナは2文字以上20文字以内で入力してください")]
+            "氏名カナは2文字以上20文字以内で入力してください")]
+    [RegularExpression(
+    "^[ァ-ヶー・ 　]+$",
+    ErrorMessage =
+        "顧客名カナは全角カナで入力してください")]
     public string Kana { get; set; } =
         string.Empty;
 
@@ -73,6 +78,7 @@ public class RegisterCustomerAccountViewModel
     /// <summary>
     /// メールアドレス
     /// </summary>
+    [FromQuery]
     [Required(
         ErrorMessage =
             "メールアドレスを入力してください")]
@@ -90,6 +96,7 @@ public class RegisterCustomerAccountViewModel
     /// <summary>
     /// アカウント名
     /// </summary>
+    [FromQuery]
     [Required(
         ErrorMessage =
             "アカウント名を入力してください")]
@@ -98,6 +105,9 @@ public class RegisterCustomerAccountViewModel
         MinimumLength = 5,
         ErrorMessage =
             "アカウント名は5文字以上30文字以内で入力してください")]
+    [RegularExpression(
+        "^(?!([a-zA-Z0-9])\\1+$)[a-zA-Z0-9]+$",
+        ErrorMessage = "アカウント名は半角英数字で入力し、同じ文字のみの登録はできません")]
     public string Username { get; set; } =
         string.Empty;
 
@@ -112,6 +122,9 @@ public class RegisterCustomerAccountViewModel
         MinimumLength = 5,
         ErrorMessage =
             "パスワードは5文字以上20文字以内で入力してください")]
+    [RegularExpression(
+        "^(?!([a-zA-Z0-9])\\1+$)[a-zA-Z0-9]+$",
+        ErrorMessage = "パスワードは半角英数字で入力し、同じ文字のみの登録はできません")]
     [DataType(
         DataType.Password)]
     public string Password { get; set; } =

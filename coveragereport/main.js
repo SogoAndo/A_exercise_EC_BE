@@ -350,6 +350,7 @@ var assemblies = [
     "classes": [
       { "name": "A_exercise_EC_BE.Presentations.Adapters.RegisterCustomerAccountViewModelAdapter", "rp": "A_exercise_EC_BE.Presentations_RegisterCustomerAccountViewModelAdapter.html", "cl": 82, "ucl": 0, "cal": 82, "tl": 147, "cb": 8, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "A_exercise_EC_BE.Presentations.Configs.ApplicationDependencyExtensions", "rp": "A_exercise_EC_BE.Presentations_ApplicationDependencyExtensions.html", "cl": 107, "ucl": 0, "cal": 107, "tl": 196, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "A_exercise_EC_BE.Presentations.Configs.CustomerJwtAuthorizeOperationFilter", "rp": "A_exercise_EC_BE.Presentations_CustomerJwtAuthorizeOperationFilter.html", "cl": 0, "ucl": 22, "cal": 22, "tl": 44, "cb": 0, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "A_exercise_EC_BE.Presentations.Configs.CustomerJwtOptionsValidator", "rp": "A_exercise_EC_BE.Presentations_CustomerJwtOptionsValidator.html", "cl": 9, "ucl": 0, "cal": 9, "tl": 28, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "A_exercise_EC_BE.Presentations.Controllers.LoginCustomerController", "rp": "A_exercise_EC_BE.Presentations_LoginCustomerController.html", "cl": 15, "ucl": 0, "cal": 15, "tl": 50, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "A_exercise_EC_BE.Presentations.Controllers.LogoutCustomerController", "rp": "A_exercise_EC_BE.Presentations_LogoutCustomerController.html", "cl": 9, "ucl": 0, "cal": 9, "tl": 44, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -375,6 +376,12 @@ var riskHotspotMetrics = [
 ];
 
 var riskHotspots = [
+  {
+    "assembly": "A_exercise_EC_BE.Presentations", "class": "A_exercise_EC_BE.Presentations.Configs.CustomerJwtAuthorizeOperationFilter", "reportPath": "A_exercise_EC_BE.Presentations_CustomerJwtAuthorizeOperationFilter.html", "methodName": "Apply(Microsoft.OpenApi.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)", "methodShortName": "Apply(...)", "fileIndex": 0, "line": 18,
+    "metrics": [
+      { "value": 42, "exceeded": true },
+      { "value": 6, "exceeded": false },
+    ]},
   {
     "assembly": "A_exercise_EC_BE.Applications", "class": "A_exercise_EC_BE.Applications.Security.PasswordHashingService", "reportPath": "A_exercise_EC_BE.Applications_PasswordHashingService.html", "methodName": "Verify(System.String,System.String)", "methodShortName": "Verify(...)", "fileIndex": 0, "line": 80,
     "metrics": [
