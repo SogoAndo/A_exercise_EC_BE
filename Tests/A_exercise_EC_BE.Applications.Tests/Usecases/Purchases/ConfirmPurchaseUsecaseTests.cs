@@ -337,6 +337,31 @@ public class ConfirmPurchaseUsecaseTests
         VerifyTransactionNotStarted();
     }
 
+    [TestMethod(
+        DisplayName =
+            "ConfirmAsync_顧客UUIDが空の場合は"
+            + "DomainExceptionをスローする")]
+    public async Task
+        ConfirmAsync_WhenCustomerUuidIsEmpty_ThrowsDomainException()
+    {
+        var request = new ConfirmPurchaseRequest(
+            Guid.Empty,
+            PaymentMethodId,
+            [
+                new ConfirmPurchaseItemRequest(
+                    FirstProductUuid,
+                    1)
+            ]);
+
+        var exception = await Assert.ThrowsExactlyAsync<DomainException>(
+            () => _usecase.ConfirmAsync(request));
+
+        Assert.AreEqual(
+            "顧客識別IDが不正です",
+            exception.Message);
+        VerifyTransactionNotStarted();
+    }
+
     /// <summary>
     /// カートが空の場合は
     /// 処理を開始しないこと。
@@ -371,6 +396,52 @@ public class ConfirmPurchaseUsecaseTests
             "カートに商品がありません",
             exception.Message);
 
+        VerifyTransactionNotStarted();
+    }
+
+    [TestMethod(
+        DisplayName =
+            "ConfirmAsync_商品一覧がnullの場合は"
+            + "DomainExceptionをスローする")]
+    public async Task
+        ConfirmAsync_WhenItemsIsNull_ThrowsDomainException()
+    {
+        var request = new ConfirmPurchaseRequest(
+            CustomerUuid,
+            PaymentMethodId,
+            null!);
+
+        var exception = await Assert.ThrowsExactlyAsync<DomainException>(
+            () => _usecase.ConfirmAsync(request));
+
+        Assert.AreEqual(
+            "カートに商品がありません",
+            exception.Message);
+        VerifyTransactionNotStarted();
+    }
+
+    [TestMethod(
+        DisplayName =
+            "ConfirmAsync_商品UUIDが空の場合は"
+            + "DomainExceptionをスローする")]
+    public async Task
+        ConfirmAsync_WhenProductUuidIsEmpty_ThrowsDomainException()
+    {
+        var request = new ConfirmPurchaseRequest(
+            CustomerUuid,
+            PaymentMethodId,
+            [
+                new ConfirmPurchaseItemRequest(
+                    Guid.Empty,
+                    1)
+            ]);
+
+        var exception = await Assert.ThrowsExactlyAsync<DomainException>(
+            () => _usecase.ConfirmAsync(request));
+
+        Assert.AreEqual(
+            "商品識別IDが不正です",
+            exception.Message);
         VerifyTransactionNotStarted();
     }
 
@@ -534,6 +605,56 @@ public class ConfirmPurchaseUsecaseTests
             "支払い方法は銀行振込のみ選択できます",
             exception.Message);
 
+        VerifyTransactionNotStarted();
+    }
+
+    [TestMethod(
+        DisplayName =
+            "ConfirmAsync_支払い方法が存在しない場合は"
+            + "NotFoundExceptionをスローする")]
+    public async Task
+        ConfirmAsync_WhenPaymentMethodDoesNotExist_ThrowsNotFoundException()
+    {
+        _paymentMethodRepositoryMock
+            .Setup(repository =>
+                repository.FindByIdAsync(
+                    PaymentMethodId))
+            .ReturnsAsync(
+                (PaymentMethod?)null);
+
+        var exception =
+            await Assert.ThrowsExactlyAsync<NotFoundException>(
+                () => _usecase.ConfirmAsync(
+                    CreateValidRequest()));
+
+        Assert.AreEqual(
+            "支払い方法が見つかりません",
+            exception.Message);
+        VerifyTransactionNotStarted();
+    }
+
+    [TestMethod(
+        DisplayName =
+            "ConfirmAsync_初期注文ステータスがない場合は"
+            + "InternalExceptionをスローする")]
+    public async Task
+        ConfirmAsync_WhenInitialOrderStatusDoesNotExist_ThrowsInternalException()
+    {
+        _orderStatusRepositoryMock
+            .Setup(repository =>
+                repository.FindByNameAsync(
+                    "受付"))
+            .ReturnsAsync(
+                (OrderStatus?)null);
+
+        var exception =
+            await Assert.ThrowsExactlyAsync<InternalException>(
+                () => _usecase.ConfirmAsync(
+                    CreateValidRequest()));
+
+        Assert.AreEqual(
+            "初期注文ステータスが登録されていません",
+            exception.Message);
         VerifyTransactionNotStarted();
     }
 
