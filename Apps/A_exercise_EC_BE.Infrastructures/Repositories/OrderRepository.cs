@@ -39,7 +39,7 @@ public class OrderRepository : IOrderRepository
         _adapter = adapter;
     }
 
-    public async Task CreateAsync(
+    public async Task<int> CreateAsync(
     Orders order)
     {
         try
@@ -91,6 +91,8 @@ public class OrderRepository : IOrderRepository
                 entity);
 
             await _context.SaveChangesAsync();
+
+            return entity.Id;
         }
         catch (InternalException)
         {

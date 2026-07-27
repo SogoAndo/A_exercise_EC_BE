@@ -35,6 +35,32 @@ public class CustomerRepository(
         }
     }
 
+    /// <inheritdoc />
+    public async Task<Customer?> FindByCustomerUuidAsync(
+        Guid customerUuid)
+    {
+        try
+        {
+            var entity = await _context.Customers
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    customer =>
+                        customer.CustomerUuid
+                        == customerUuid);
+
+            return entity is null
+                ? null
+                : await _adapter.RestoreAsync(entity);
+        }
+        catch (Exception exception)
+        {
+            throw new InternalException(
+                $"顧客UUID:{customerUuid}"
+                + "の顧客取得中に予期しないエラーが発生しました。",
+                exception);
+        }
+    }
+
     /// <summary>
     /// アカウント名が既に存在するかを確認する
     /// </summary>

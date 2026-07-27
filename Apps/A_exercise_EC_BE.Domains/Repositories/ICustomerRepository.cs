@@ -10,6 +10,17 @@ public interface ICustomerRepository
     Task<Customer?> FindByMailAddressAsync(string mailAddress);
 
     /// <summary>
+    /// 顧客UUIDに一致する顧客を取得する。
+    /// </summary>
+    /// <param name="customerUuid">顧客UUID</param>
+    /// <returns>
+    /// 一致する顧客。
+    /// 存在しない場合はnull。
+    /// </returns>
+    Task<Customer?> FindByCustomerUuidAsync(
+        Guid customerUuid);
+
+    /// <summary>
     /// ユーザー名がすでに登録されているか確認する。
     /// </summary>
     Task<bool> ExistsByUsernameAsync(

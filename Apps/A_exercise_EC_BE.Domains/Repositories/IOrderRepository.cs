@@ -13,8 +13,11 @@ public interface IOrderRepository
     /// <param name="order">
     /// 永続化する注文
     /// </param>
-    /// <returns>なし</returns>
-    Task CreateAsync(
+    /// <returns>
+    /// 登録した注文のDB内部ID。
+    /// 注文明細との関連付けにのみ使用する。
+    /// </returns>
+    Task<int> CreateAsync(
         Orders order
     );
 

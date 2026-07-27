@@ -5,4 +5,5 @@ namespace A_exercise_EC_BE.Applications.Usecases.Purchases;
 /// </summary>
 public sealed record ConfirmPurchaseRequest(
     Guid CustomerUuid,
+    int PaymentMethodId,
     IReadOnlyCollection<ConfirmPurchaseItemRequest> Items);
