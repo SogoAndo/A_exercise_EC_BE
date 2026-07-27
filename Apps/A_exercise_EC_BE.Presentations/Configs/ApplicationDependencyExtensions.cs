@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using A_exercise_EC_BE.Domains.Adapters;
 using A_exercise_EC_BE.Infrastructures.Contexts;
 using A_exercise_EC_BE.Infrastructures.Adapters;
+using A_exercise_EC_BE.Infrastructures.Entities;
 using A_exercise_EC_BE.Infrastructures.Repositories;
 using A_exercise_EC_BE.Infrastructures.Security;
 using A_exercise_EC_BE.Domains.Repositories;
@@ -78,6 +80,13 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+        services.AddScoped<IProductStockRepository, ProductStockRepository>();
+        services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
+        services.AddScoped<IOrderStatusRepository, OrderStatusRepository>();
+        services.AddScoped<
+            IConverter<OrdersDetail, OrdersDetailEntity>,
+            OrdersDetailEntityAdapter>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -117,6 +126,12 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<
             ISearchPurchaseHistoryUsecase,
             SearchPurchaseHistoryUsecase>();
+        services.AddScoped<
+            IPurchaseAmountCalculator,
+            PurchaseAmountCalculator>();
+        services.AddScoped<
+            IConfirmPurchaseUsecase,
+            ConfirmPurchaseUsecase>();
 
         return services;
     }
@@ -172,6 +187,7 @@ public static class ApplicationDependencyExtensions
         // RegisterBookViewModelからドメインオブジェクト:Bookへ変換するアダプタ
         services.AddScoped<RegisterCustomerAccountViewModelAdapter>();
         services.AddScoped<PurchaseHistoryViewModelAdapter>();
+        services.AddScoped<PurchaseViewModelAdapter>();
         return services;
     }
 

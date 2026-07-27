@@ -4,6 +4,7 @@ using A_exercise_EC_BE.Applications.Usecases;
 using A_exercise_EC_BE.Applications.Usecases.Accounts;
 using A_exercise_EC_BE.Applications.Usecases.Customers;
 using A_exercise_EC_BE.Applications.Usecases.Products;
+using A_exercise_EC_BE.Applications.Usecases.Purchases;
 using A_exercise_EC_BE.Domains.Repositories;
 using A_exercise_EC_BE.Infrastructures.Adapters;
 using A_exercise_EC_BE.Infrastructures.Contexts;
@@ -343,6 +344,87 @@ public class ApplicationDependencyExtensionsTests
         Assert.IsInstanceOfType<
             SearchProductByCategoryUsecase>(
                 actual);
+    }
+
+    /// <summary>
+    /// 購入確定に必要な
+    /// 依存関係が登録されること
+    /// </summary>
+    [TestMethod(
+        DisplayName =
+            "BuildAppProvider_購入確定の依存関係を登録する")]
+    public void
+        BuildAppProvider_RegistersPurchaseConfirmationDependencies()
+    {
+        // Arrange
+        using var provider =
+            ApplicationDependencyExtensions
+                .BuildAppProvider(
+                    CreateConfiguration());
+
+        using var scope =
+            provider.CreateScope();
+
+        var services =
+            scope.ServiceProvider;
+
+        // Act
+        var productStockRepository =
+            services.GetRequiredService<
+                IProductStockRepository>();
+
+        var orderDetailRepository =
+            services.GetRequiredService<
+                IOrderDetailRepository>();
+
+        var paymentMethodRepository =
+            services.GetRequiredService<
+                IPaymentMethodRepository>();
+
+        var orderStatusRepository =
+            services.GetRequiredService<
+                IOrderStatusRepository>();
+
+        var amountCalculator =
+            services.GetRequiredService<
+                IPurchaseAmountCalculator>();
+
+        var usecase =
+            services.GetRequiredService<
+                IConfirmPurchaseUsecase>();
+
+        var adapter =
+            services.GetRequiredService<
+                PurchaseViewModelAdapter>();
+
+        // Assert
+        Assert.IsInstanceOfType<
+            ProductStockRepository>(
+                productStockRepository);
+
+        Assert.IsInstanceOfType<
+            OrderDetailRepository>(
+                orderDetailRepository);
+
+        Assert.IsInstanceOfType<
+            PaymentMethodRepository>(
+                paymentMethodRepository);
+
+        Assert.IsInstanceOfType<
+            OrderStatusRepository>(
+                orderStatusRepository);
+
+        Assert.IsInstanceOfType<
+            PurchaseAmountCalculator>(
+                amountCalculator);
+
+        Assert.IsInstanceOfType<
+            ConfirmPurchaseUsecase>(
+                usecase);
+
+        Assert.IsInstanceOfType<
+            PurchaseViewModelAdapter>(
+                adapter);
     }
 
     /// <summary>

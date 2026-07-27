@@ -56,6 +56,8 @@ public sealed class ApiExceptionMiddleware
                 (StatusCodes.Status400BadRequest, exception.Message),
             ExistsException =>
                 (StatusCodes.Status409Conflict, exception.Message),
+            NotFoundException =>
+                (StatusCodes.Status404NotFound, exception.Message),
             UnauthorizedAccessException =>
                 (StatusCodes.Status401Unauthorized, exception.Message),
             InternalException =>

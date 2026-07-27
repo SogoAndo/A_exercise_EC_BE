@@ -39,6 +39,20 @@ public class ApiExceptionMiddlewareTests
     }
 
     [TestMethod]
+    public async Task InvokeAsync_WhenNotFoundException_ReturnsNotFound()
+    {
+        const string message = "対象のデータが見つかりません。";
+
+        var result = await ExecuteAsync(
+            new NotFoundException(message));
+
+        Assert.AreEqual(
+            StatusCodes.Status404NotFound,
+            result.StatusCode);
+        Assert.AreEqual(message, result.Message);
+    }
+
+    [TestMethod]
     public async Task InvokeAsync_WhenUnauthorizedAccessException_ReturnsUnauthorized()
     {
         const string message =
