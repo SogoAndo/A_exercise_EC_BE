@@ -126,6 +126,7 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<ILoginCustomerUsecase, LoginCustomerUsecase>();
         services.AddScoped<ILogoutCustomerUsecase, LogoutCustomerUsecase>();
         services.AddScoped<ISearchProductByCategoryUsecase, SearchProductByCategoryUsecase>();
+        services.AddScoped<IGetProductDetailUsecase, GetProductDetailUsecase>();
         services.AddScoped<
             ISearchPurchaseHistoryUsecase,
             SearchPurchaseHistoryUsecase>();
@@ -194,6 +195,7 @@ public static class ApplicationDependencyExtensions
 
         // RegisterBookViewModelからドメインオブジェクト:Bookへ変換するアダプタ
         services.AddScoped<RegisterCustomerAccountViewModelAdapter>();
+        services.AddScoped<ProductDetailViewModelAdapter>();
         services.AddScoped<PurchaseHistoryViewModelAdapter>();
         services.AddScoped<PurchaseViewModelAdapter>();
         return services;
