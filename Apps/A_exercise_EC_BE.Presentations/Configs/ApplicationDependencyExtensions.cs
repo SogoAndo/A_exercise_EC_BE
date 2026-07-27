@@ -21,6 +21,7 @@ using A_exercise_EC_BE.Presentations.Adapters;
 using A_exercise_EC_BE.Presentations.Authentication;
 using A_exercise_EC_BE.Applications.Usecases.Products;
 using A_exercise_EC_BE.Applications.Usecases.Purchases;
+using A_exercise_EC_BE.Applications.Usecases.PaymentMethods;
 
 namespace A_exercise_EC_BE.Presentations.Configs;
 /// <summary>
@@ -132,7 +133,9 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<
             IConfirmPurchaseUsecase,
             ConfirmPurchaseUsecase>();
-
+        services.AddScoped<
+            IFindAllPaymentMethodsUsecase,
+            FindAllPaymentMethodsUsecase>();
         return services;
     }
 
