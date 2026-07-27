@@ -10,6 +10,13 @@ namespace A_exercise_EC_BE.Infrastructures.Tests.Security;
 public class PBKDF2CustomerPasswordVerifierTests
 {
     [TestMethod]
+    public void Constructor_WithNullPasswordHashingService_ThrowsArgumentNullException()
+    {
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => new PBKDF2CustomerPasswordVerifier(null!));
+    }
+
+    [TestMethod]
     public void Verify_WithHashCreatedAtCustomerRegistration_ReturnsTrue()
     {
         var passwordHashingService = new PasswordHashingService();

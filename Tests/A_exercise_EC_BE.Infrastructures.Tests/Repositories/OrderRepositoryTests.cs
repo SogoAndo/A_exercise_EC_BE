@@ -298,6 +298,9 @@ public class OrderRepositoryTests
         var expectedEntities =
             await dbContext.Orders
                 .AsNoTracking()
+                .Include(
+                    order =>
+                        order.OrderStatus)
                 .Where(
                     order =>
                         order.CustomerId
@@ -335,6 +338,25 @@ public class OrderRepositoryTests
                 .Select(
                     order =>
                         order.OrderUuid)
+                .ToList());
+
+        Assert.IsTrue(
+            result.All(
+                order =>
+                    order.Customer.CustomerUuid
+                    == customer.CustomerUuid),
+            "他ユーザーの購入履歴が含まれています。");
+
+        CollectionAssert.AreEqual(
+            expectedEntities
+                .Select(
+                    entity =>
+                        entity.OrderStatus.Name)
+                .ToList(),
+            result
+                .Select(
+                    order =>
+                        order.OrderStatus.Name)
                 .ToList());
 
         /*
@@ -488,6 +510,69 @@ public class OrderRepositoryTests
         Assert.AreEqual(
             orderEntity.AmountTotal,
             result.AmountTotal);
+
+        Assert.HasCount(
+            orderEntity.OrderDetails.Count,
+            result.OrdersDetails);
+
+        CollectionAssert.AreEqual(
+            orderEntity.OrderDetails
+                .Select(detail => detail.Product.ProductUuid)
+                .ToList(),
+            result.OrdersDetails
+                .Select(detail => detail.Product.ProductUuid)
+                .ToList());
+
+        var expectedDetails =
+            orderEntity.OrderDetails.ToDictionary(
+                detail =>
+                    detail.Product.ProductUuid);
+
+        foreach (var detail in result.OrdersDetails)
+        {
+            var expectedDetail =
+                expectedDetails[detail.Product.ProductUuid];
+
+            Assert.AreEqual(
+                expectedDetail.Product.Name,
+                detail.Product.Name);
+            Assert.AreEqual(
+                expectedDetail.Product.Price,
+                detail.Product.Price);
+            Assert.AreEqual(
+                expectedDetail.Count,
+                detail.Count);
+        }
+
+        var expectedCustomerUuid =
+            await dbContext.Customers
+                .AsNoTracking()
+                .Where(customer =>
+                    customer.Id == orderEntity.CustomerId)
+                .Select(customer =>
+                    customer.CustomerUuid)
+                .SingleAsync();
+
+        Assert.AreEqual(
+            expectedCustomerUuid,
+            result.Customer.CustomerUuid);
+
+        var expectedStatusName =
+            await dbContext.OrderStatuses
+                .AsNoTracking()
+                .Where(status =>
+                    status.Id == orderEntity.OrderStatusId)
+                .Select(status =>
+                    status.Name)
+                .SingleAsync();
+
+        Assert.AreEqual(
+            orderEntity.OrderStatusId,
+            result.OrderStatus.Id);
+
+        Assert.AreEqual(
+            expectedStatusName,
+            result.OrderStatus.Name);
     }
 
     /// <summary>

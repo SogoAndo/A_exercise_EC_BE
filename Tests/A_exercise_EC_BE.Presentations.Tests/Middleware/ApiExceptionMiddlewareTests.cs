@@ -2,7 +2,9 @@ using System.Text.Json;
 using A_exercise_EC_BE.Domains.Exceptions;
 using A_exercise_EC_BE.Presentations.Middleware;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace A_exercise_EC_BE.Presentations.Tests.Middleware;
 
@@ -10,6 +12,24 @@ namespace A_exercise_EC_BE.Presentations.Tests.Middleware;
 [TestCategory("Presentations/Middleware")]
 public class ApiExceptionMiddlewareTests
 {
+    [TestMethod]
+    public async Task InvokeAsync_WhenNoException_CompletesNormally()
+    {
+        var called = false;
+        var context = new DefaultHttpContext();
+        var middleware = new ApiExceptionMiddleware(
+            _ =>
+            {
+                called = true;
+                return Task.CompletedTask;
+            },
+            NullLogger<ApiExceptionMiddleware>.Instance);
+
+        await middleware.InvokeAsync(context);
+
+        Assert.IsTrue(called);
+    }
+
     [TestMethod]
     public async Task InvokeAsync_WhenDomainException_ReturnsBadRequest()
     {
@@ -94,6 +114,34 @@ public class ApiExceptionMiddlewareTests
         Assert.AreEqual(
             "システムエラーが発生しました。",
             result.Message);
+    }
+
+    [TestMethod]
+    public async Task InvokeAsync_WhenResponseHasStarted_RethrowsException()
+    {
+        var expected = new InvalidOperationException("response started");
+        var context = new DefaultHttpContext();
+        var responseFeature = new Mock<IHttpResponseFeature>();
+        responseFeature
+            .SetupGet(feature => feature.HasStarted)
+            .Returns(true);
+        responseFeature
+            .SetupProperty(feature => feature.StatusCode, 200);
+        responseFeature
+            .SetupProperty(feature => feature.ReasonPhrase);
+        responseFeature
+            .SetupProperty(
+                feature => feature.Headers,
+                new HeaderDictionary());
+        context.Features.Set(responseFeature.Object);
+        var middleware = new ApiExceptionMiddleware(
+            _ => throw expected,
+            NullLogger<ApiExceptionMiddleware>.Instance);
+
+        var actual = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => middleware.InvokeAsync(context));
+
+        Assert.AreSame(expected, actual);
     }
 
     private static async Task<ErrorResult> ExecuteAsync(

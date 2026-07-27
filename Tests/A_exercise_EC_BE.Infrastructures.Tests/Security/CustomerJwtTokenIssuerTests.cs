@@ -95,6 +95,13 @@ public class CustomerJwtTokenIssuerTests
             () => issuer.Issue(Guid.Empty));
     }
 
+    [TestMethod]
+    public void Constructor_WithNullOptions_ThrowsArgumentNullException()
+    {
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => new CustomerJwtTokenIssuer(null!));
+    }
+
     private static CustomerJwtTokenIssuer CreateIssuer(
         CustomerJwtOptions options,
         TimeProvider? timeProvider = null) =>

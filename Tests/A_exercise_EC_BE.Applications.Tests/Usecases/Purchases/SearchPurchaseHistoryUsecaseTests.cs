@@ -144,6 +144,26 @@ public class SearchPurchaseHistoryUsecaseTests
             Times.Never);
     }
 
+    [TestMethod(DisplayName = "空の顧客UUIDでは購入履歴詳細を検索しない")]
+    public async Task FindDetailAsync_WhenCustomerUuidIsEmpty_ThrowsDomainException()
+    {
+        var repository = new Mock<IOrderRepository>();
+        var usecase = new SearchPurchaseHistoryUsecase(
+            repository.Object);
+
+        var exception = await Assert.ThrowsExactlyAsync<DomainException>(
+            () => usecase.FindDetailAsync(
+                Guid.Empty,
+                Guid.NewGuid()));
+
+        Assert.AreEqual(
+            "顧客識別IDが不正です。",
+            exception.Message);
+        repository.Verify(
+            x => x.FindByOrderUuidAsync(It.IsAny<Guid>()),
+            Times.Never);
+    }
+
     [TestMethod(DisplayName = "リポジトリ例外を呼び出し元へ伝える")]
     public async Task SearchAsync_WhenRepositoryFails_PropagatesException()
     {
@@ -159,6 +179,28 @@ public class SearchPurchaseHistoryUsecaseTests
 
         var actual = await Assert.ThrowsExactlyAsync<InternalException>(
             () => usecase.SearchAsync(customerUuid));
+
+        Assert.AreSame(expected, actual);
+    }
+
+    [TestMethod(DisplayName = "購入履歴詳細のDB取得エラーを呼び出し元へ伝える")]
+    public async Task FindDetailAsync_WhenRepositoryFails_PropagatesException()
+    {
+        var customerUuid = Guid.NewGuid();
+        var orderUuid = Guid.NewGuid();
+        var expected = new InternalException(
+            "購入履歴詳細の取得中に予期しないエラーが発生しました。");
+        var repository = new Mock<IOrderRepository>();
+        repository
+            .Setup(x => x.FindByOrderUuidAsync(orderUuid))
+            .ThrowsAsync(expected);
+        var usecase = new SearchPurchaseHistoryUsecase(
+            repository.Object);
+
+        var actual = await Assert.ThrowsExactlyAsync<InternalException>(
+            () => usecase.FindDetailAsync(
+                customerUuid,
+                orderUuid));
 
         Assert.AreSame(expected, actual);
     }

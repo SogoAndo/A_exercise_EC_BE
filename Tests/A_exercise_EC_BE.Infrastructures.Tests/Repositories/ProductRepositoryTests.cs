@@ -336,6 +336,9 @@ public class ProductRepositoryTests
         SelectByProductCategoryIdAsync_WhenOtherCategoryProductsExist_ShouldExcludeThem()
     {
         // Arrange
+        var createdCategoryUuid =
+            Guid.Empty;
+
         var categories =
             await dbContext.ProductCategories
                 .AsNoTracking()
@@ -345,10 +348,31 @@ public class ProductRepositoryTests
                 .Take(2)
                 .ToListAsync();
 
-        Assert.HasCount(
-            2,
-            categories,
-            "テストには2件以上の商品カテゴリが必要です。");
+        if (categories.Count < 2)
+        {
+            createdCategoryUuid =
+                Guid.NewGuid();
+
+            await dbContext.ProductCategories.AddAsync(
+                new ProductCategoryEntity
+                {
+                    CategoryUuid =
+                        createdCategoryUuid,
+                    Name =
+                        "テスト用別カテゴリ"
+                });
+
+            await dbContext.SaveChangesAsync();
+
+            categories =
+                await dbContext.ProductCategories
+                    .AsNoTracking()
+                    .OrderBy(
+                        category =>
+                            category.Id)
+                    .Take(2)
+                    .ToListAsync();
+        }
 
         var targetCategory =
             categories[0];
@@ -356,26 +380,42 @@ public class ProductRepositoryTests
         var otherCategory =
             categories[1];
 
-        // Act
-        var result =
-            await repository
-                .SelectByProductCategoryIdAsync(
-                    targetCategory.CategoryUuid);
+        try
+        {
+            // Act
+            var result =
+                await repository
+                    .SelectByProductCategoryIdAsync(
+                        targetCategory.CategoryUuid);
 
-        // Assert
-        Assert.IsFalse(
-            result.Any(
-                product =>
-                    product.ProductCategory
-                        ?.CategoryUuid
-                    == otherCategory.CategoryUuid));
+            // Assert
+            Assert.IsFalse(
+                result.Any(
+                    product =>
+                        product.ProductCategory
+                            ?.CategoryUuid
+                        == otherCategory.CategoryUuid));
 
-        Assert.IsTrue(
-            result.All(
-                product =>
-                    product.ProductCategory
-                        ?.CategoryUuid
-                    == targetCategory.CategoryUuid));
+            Assert.IsTrue(
+                result.All(
+                    product =>
+                        product.ProductCategory
+                            ?.CategoryUuid
+                        == targetCategory.CategoryUuid));
+        }
+        finally
+        {
+            if (createdCategoryUuid
+                != Guid.Empty)
+            {
+                await dbContext.ProductCategories
+                    .Where(
+                        category =>
+                            category.CategoryUuid
+                            == createdCategoryUuid)
+                    .ExecuteDeleteAsync();
+            }
+        }
     }
 
     /// <summary>

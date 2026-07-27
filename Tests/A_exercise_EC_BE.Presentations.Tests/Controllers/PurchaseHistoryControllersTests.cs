@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.Json;
 using A_exercise_EC_BE.Applications.Usecases.Purchases;
 using A_exercise_EC_BE.Domains.Models;
 using A_exercise_EC_BE.Presentations.Adapters;
@@ -46,6 +47,15 @@ public class PurchaseHistoryControllersTests
         Assert.AreEqual(
             order.OrderStatus.Name,
             response.OrderList[0].OrderStatus);
+        Assert.AreEqual(
+            order.OrderDate.ToString("yyyy/MM/dd HH:mm:ss"),
+            response.OrderList[0].OrderDate);
+        Assert.AreEqual(
+            order.AmountTotal,
+            response.OrderList[0].TotalPrice);
+        Assert.AreEqual(
+            $"/purchase/history/{order.OrderUuid:D}",
+            response.OrderList[0].DetailUrl);
         Assert.IsNull(response.Message);
         usecase.Verify(
             x => x.SearchAsync(customerUuid),
@@ -103,6 +113,9 @@ public class PurchaseHistoryControllersTests
             ok.Value as PurchaseHistoryDetailViewModel;
         Assert.IsNotNull(response);
         Assert.AreEqual(order.OrderUuid, response.OrderUuid);
+        Assert.AreEqual(
+            order.OrderDate.ToString("yyyy/MM/dd HH:mm:ss"),
+            response.OrderDate);
         Assert.AreEqual(order.AmountTotal, response.TotalPrice);
         Assert.AreEqual(
             order.OrderStatus.Id,
@@ -111,6 +124,18 @@ public class PurchaseHistoryControllersTests
             order.OrderStatus.Name,
             response.OrderStatusName);
         Assert.HasCount(1, response.OrderItems);
+        Assert.AreEqual(
+            order.OrdersDetails[0].Product.ProductUuid,
+            response.OrderItems[0].ProductUuid);
+        Assert.AreEqual(
+            order.OrdersDetails[0].Product.Name,
+            response.OrderItems[0].ProductName);
+        Assert.AreEqual(
+            order.OrdersDetails[0].Product.Price,
+            response.OrderItems[0].Price);
+        Assert.AreEqual(
+            order.OrdersDetails[0].Count,
+            response.OrderItems[0].Quantity);
         Assert.AreEqual(200, response.OrderItems[0].Subtotal);
     }
 
@@ -134,6 +159,17 @@ public class PurchaseHistoryControllersTests
 
         Assert.IsInstanceOfType<NotFoundObjectResult>(
             actionResult.Result);
+        var notFound = (NotFoundObjectResult)actionResult.Result;
+        var message = notFound.Value?
+            .GetType()
+            .GetProperty("message")?
+            .GetValue(notFound.Value);
+        Assert.AreEqual(
+            "購入履歴が見つかりませんでした。",
+            message);
+        usecase.Verify(
+            x => x.FindDetailAsync(customerUuid, orderUuid),
+            Times.Once);
     }
 
     [TestMethod(DisplayName = "顧客UUID claimがない場合は認証例外にする")]
@@ -156,6 +192,81 @@ public class PurchaseHistoryControllersTests
         usecase.Verify(
             x => x.SearchAsync(It.IsAny<Guid>()),
             Times.Never);
+    }
+
+    [TestMethod(DisplayName = "購入履歴詳細は顧客UUID claimがない場合に認証例外にする")]
+    public async Task DetailGetAsync_WhenSubjectIsMissing_ThrowsUnauthorized()
+    {
+        var usecase = new Mock<ISearchPurchaseHistoryUsecase>();
+        var controller = new PurchaseHistoryDetailController(
+            usecase.Object,
+            new PurchaseHistoryViewModelAdapter())
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            }
+        };
+
+        await Assert.ThrowsExactlyAsync<UnauthorizedAccessException>(
+            () => controller.GetAsync(Guid.NewGuid()));
+
+        usecase.Verify(
+            x => x.FindDetailAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>()),
+            Times.Never);
+    }
+
+    [TestMethod(DisplayName = "不正な顧客UUID claimでは購入履歴を検索しない")]
+    public async Task ListGetAsync_WhenSubjectIsInvalid_ThrowsUnauthorized()
+    {
+        var usecase = new Mock<ISearchPurchaseHistoryUsecase>();
+        var controller = new PurchaseHistoryListController(
+            usecase.Object,
+            new PurchaseHistoryViewModelAdapter());
+        SetCustomerSubject(controller, "invalid-customer-uuid");
+
+        await Assert.ThrowsExactlyAsync<UnauthorizedAccessException>(
+            () => controller.GetAsync());
+
+        usecase.Verify(
+            x => x.SearchAsync(It.IsAny<Guid>()),
+            Times.Never);
+    }
+
+    [TestMethod(DisplayName = "購入履歴の商品名はJSONで安全にエスケープされる")]
+    public async Task DetailGetAsync_WhenProductNameContainsHtml_EscapesJson()
+    {
+        var customerUuid = Guid.NewGuid();
+        var order = CreateOrder(
+            customerUuid,
+            "<script>alert('xss')</script>");
+        var usecase = new Mock<ISearchPurchaseHistoryUsecase>();
+        usecase
+            .Setup(x => x.FindDetailAsync(
+                customerUuid,
+                order.OrderUuid))
+            .ReturnsAsync(order);
+        var controller = new PurchaseHistoryDetailController(
+            usecase.Object,
+            new PurchaseHistoryViewModelAdapter());
+        SetCustomer(controller, customerUuid);
+
+        var actionResult = await controller.GetAsync(
+            order.OrderUuid);
+        var ok = actionResult.Result as OkObjectResult;
+        Assert.IsNotNull(ok);
+
+        var json = JsonSerializer.Serialize(ok.Value);
+
+        Assert.IsFalse(
+            json.Contains(
+                "<script>",
+                StringComparison.Ordinal));
+        StringAssert.Contains(
+            json,
+            "\\u003Cscript\\u003E");
     }
 
     [TestMethod(DisplayName = "一覧・詳細Controllerのルートと顧客認証を設定する")]
@@ -194,12 +305,19 @@ public class PurchaseHistoryControllersTests
     private static void SetCustomer(
         ControllerBase controller,
         Guid customerUuid)
+        => SetCustomerSubject(
+            controller,
+            customerUuid.ToString("D"));
+
+    private static void SetCustomerSubject(
+        ControllerBase controller,
+        string subject)
     {
         var identity = new ClaimsIdentity(
             [
                 new Claim(
                     JwtRegisteredClaimNames.Sub,
-                    customerUuid.ToString("D"))
+                    subject)
             ],
             CustomerJwtAuthenticationDefaults.AuthenticationScheme);
 
@@ -213,11 +331,12 @@ public class PurchaseHistoryControllersTests
     }
 
     private static Orders CreateOrder(
-        Guid customerUuid)
+        Guid customerUuid,
+        string productName = "ボールペン")
     {
         var product = new Product(
             Guid.NewGuid(),
-            "ボールペン",
+            productName,
             100);
         var customer = new Customer(
             customerUuid,
