@@ -86,6 +86,7 @@ public static class ApplicationDependencyExtensions
         services.AddScoped<IProductStockRepository, ProductStockRepository>();
         services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
         services.AddScoped<IOrderStatusRepository, OrderStatusRepository>();
+        services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
         services.AddScoped<
             IConverter<OrdersDetail, OrdersDetailEntity>,
             OrdersDetailEntityAdapter>();
