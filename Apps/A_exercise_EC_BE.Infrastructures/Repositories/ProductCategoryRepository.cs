@@ -35,7 +35,11 @@ public class ProductCategoryRepository : IProductCategoryRepository
         {
             // すべての商品カテゴリを取得する
             var entities = await _context.ProductCategories
-                .AsNoTracking().ToListAsync(); //追跡データをもらわない形でEntityが入ったリストで受けとる
+                    .AsNoTracking()
+                    .OrderBy(
+                        productCategory =>
+                            productCategory.Id)
+                    .ToListAsync();
             // ProductCategoryのリストを生成する
             var categories = new List<ProductCategory>();
             foreach (var entity in entities)
