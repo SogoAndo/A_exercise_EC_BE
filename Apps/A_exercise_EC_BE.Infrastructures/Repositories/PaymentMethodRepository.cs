@@ -15,6 +15,36 @@ public class PaymentMethodRepository(
     PaymentMethodEntityAdapter adapter)
     : IPaymentMethodRepository
 {
+
+    /// <inheritdoc />
+    public async Task<List<PaymentMethod>> FindAllAsync()
+    {
+        try
+        {
+            var entities = await context.PaymentMethods
+                .AsNoTracking()
+                .OrderBy(
+                    paymentMethod => paymentMethod.Id)
+                .ToListAsync();
+
+            var paymentMethods =
+                new List<PaymentMethod>();
+
+            foreach (var entity in entities)
+            {
+                paymentMethods.Add(
+                    await adapter.RestoreAsync(entity));
+            }
+
+            return paymentMethods;
+        }
+        catch (Exception exception)
+        {
+            throw new InternalException(
+                "支払い方法一覧取得中に予期しないエラーが発生しました。",
+                exception);
+        }
+    }
     /// <inheritdoc />
     public async Task<PaymentMethod?> FindByIdAsync(
         int paymentMethodId)

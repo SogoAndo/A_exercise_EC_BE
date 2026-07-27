@@ -7,6 +7,12 @@ namespace A_exercise_EC_BE.Domains.Repositories;
 /// </summary>
 public interface IPaymentMethodRepository
 {
+
+    /// <summary>
+    /// 支払い方法一覧を取得する。
+    /// </summary>
+    /// <returns>支払い方法一覧</returns>
+    Task<List<PaymentMethod>> FindAllAsync();
     /// <summary>
     /// 支払い方法IDに一致する支払い方法を取得する。
     /// </summary>
