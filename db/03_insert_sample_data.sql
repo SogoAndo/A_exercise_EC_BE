@@ -252,14 +252,14 @@ SELECT pg_catalog.setval('public.order_status_id_seq', 6, true);
 -- Name: orders_detail_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.orders_detail_id_seq', 1, false);
+SELECT pg_catalog.setval('public.orders_detail_id_seq', 10, true);
 
 
 --
 -- Name: orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.orders_id_seq', 1, false);
+SELECT pg_catalog.setval('public.orders_id_seq', 5, true);
 
 
 --
