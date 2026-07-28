@@ -3,11 +3,11 @@ using A_exercise_EC_BE.Domains.Repositories;
 
 namespace A_exercise_EC_BE.Applications.Usecases.Products;
 
-public class SearchProductByCategoryUsecase:ISearchProductByCategoryUsecase
+public class SearchProductByCategoryUsecase : ISearchProductByCategoryUsecase
 {
-private readonly IProductRepository _repository;
+    private readonly IProductRepository _repository;
 
-public SearchProductByCategoryUsecase(IProductRepository repository)
+    public SearchProductByCategoryUsecase(IProductRepository repository)
     {
         _repository = repository;
     }

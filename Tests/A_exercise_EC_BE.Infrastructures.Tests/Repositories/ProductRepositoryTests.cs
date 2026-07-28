@@ -168,9 +168,9 @@ public class ProductRepositoryTests
             await repository.FindAllAsync();
 
         // Assert
-        Assert.AreEqual(
+        Assert.HasCount(
             expectedEntities.Count,
-            result.Count);
+            result);
 
         var expectedUuids =
             expectedEntities

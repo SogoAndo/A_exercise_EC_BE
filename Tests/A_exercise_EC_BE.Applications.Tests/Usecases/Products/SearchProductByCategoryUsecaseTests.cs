@@ -98,7 +98,7 @@ public class SearchProductByCategoryUsecaseTests
             Times.Once);
     }
 
-   
+
 
     [TestMethod(DisplayName = "商品カテゴリIDがnullの場合、全商品リストを返す")]
     public async Task ExecuteAsync_WhenProductCategoryIdIsNull_ShouldReturnAllProducts()

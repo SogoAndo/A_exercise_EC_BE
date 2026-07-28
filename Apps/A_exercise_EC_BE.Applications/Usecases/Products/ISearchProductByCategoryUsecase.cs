@@ -12,5 +12,5 @@ public interface ISearchProductByCategoryUsecase
     /// </summary>
     /// <param name="productCategoryId"></param>
     /// <returns>カテゴリー検索結果</returns>
-    Task<List<Product>>ExecuteAsync(Guid? productCategoryId);
+    Task<List<Product>> ExecuteAsync(Guid? productCategoryId);
 }

@@ -28,5 +28,6 @@ public sealed class ConfirmPurchaseViewModel
         ErrorMessage =
             "カートに商品がありません")]
     public List<ConfirmPurchaseItemViewModel>
-        Items { get; init; } = [];
+        Items
+    { get; init; } = [];
 }

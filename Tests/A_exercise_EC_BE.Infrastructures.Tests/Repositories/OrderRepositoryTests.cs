@@ -324,9 +324,9 @@ public class OrderRepositoryTests
         Assert.IsNotNull(
             result);
 
-        Assert.AreEqual(
+        Assert.HasCount(
             expectedEntities.Count,
-            result.Count);
+            result);
 
         CollectionAssert.AreEqual(
             expectedEntities
