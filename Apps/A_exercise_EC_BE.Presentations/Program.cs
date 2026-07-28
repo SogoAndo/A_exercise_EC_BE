@@ -44,7 +44,21 @@ if (app.Environment.IsDevelopment()
     || swaggerEnabled)
 {
     app.MapOpenApi();
-    app.UseSwagger();
+    app.UseSwagger(
+        options =>
+        {
+            options.PreSerializeFilters.Add(
+                (swaggerDocument, _) =>
+                {
+                    swaggerDocument.Servers =
+                    [
+                        new()
+                        {
+                            Url = "/ec-api"
+                        }
+                    ];
+                });
+        });
     app.UseSwaggerUI();
 }
 
