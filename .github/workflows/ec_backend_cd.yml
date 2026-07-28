@@ -412,6 +412,88 @@ jobs:
             /etc/fullness/ec-api.env
           REMOTE_SCRIPT
 
+          # TrainingServerへ顧客APIのsystemdサービスを配置する
+      - name: systemdサービスを配置
+        env:
+          VM_HOST: ${{ secrets.AZURE_HOST }}
+          VM_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -i ~/.ssh/deploy_key \
+            "${VM_USER}@${VM_HOST}" \
+            "SERVICE_NAME='${SERVICE_NAME}' \
+             DEPLOY_DIR='${DEPLOY_DIR}' \
+             APP_DLL='${APP_DLL}' \
+             bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          test -n "${SERVICE_NAME}"
+          test -n "${DEPLOY_DIR}"
+          test -n "${APP_DLL}"
+
+          if ! id fullness > /dev/null 2>&1; then
+            echo "::error::TrainingServerにfullnessユーザーがありません"
+            exit 1
+          fi
+
+          DOTNET_PATH="$(command -v dotnet)"
+
+          if [ -z "${DOTNET_PATH}" ]; then
+            echo "::error::TrainingServerにdotnetがありません"
+            exit 1
+          fi
+
+          echo "ホスト名: $(hostname)"
+          echo "dotnet: ${DOTNET_PATH}"
+
+          temporary_service_file="$(mktemp)"
+
+          cat > "${temporary_service_file}" <<EOF
+          
+          [Unit]
+          Description=A_exercise EC Customer API
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          Type=simple
+          User=fullness
+          Group=fullness
+
+          WorkingDirectory=${DEPLOY_DIR}
+
+          ExecStart=${DOTNET_PATH} ${DEPLOY_DIR}/${APP_DLL}
+
+          EnvironmentFile=/etc/fullness/ec-api.env
+
+          Restart=on-failure
+          RestartSec=5
+
+          SyslogIdentifier=fullness-ec-api
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+
+          sudo install \
+            -o root \
+            -g root \
+            -m 644 \
+            "${temporary_service_file}" \
+            "/etc/systemd/system/${SERVICE_NAME}.service"
+
+          rm -f "${temporary_service_file}"
+
+          sudo systemctl daemon-reload
+
+          echo "=== 配置したサービス ==="
+
+          sudo systemctl cat \
+            "${SERVICE_NAME}.service"
+          REMOTE_SCRIPT
+
       # 顧客APIだけを再起動する
       # 管理API(fullness-api)とフロント(fullness-web)には触れない
       - name: サービスを再起動
