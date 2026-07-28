@@ -19,7 +19,15 @@ on:
       - dev
       - main
     paths:
-      - "A_exercise_EC_BE/**"
+      - "Apps/**"
+      - "Tests/**"
+      - "**/*.sql"
+      - "*.sln"
+      - "*.slnx"
+      - "*.props"
+      - "*.targets"
+      - "global.json"
+      - "NuGet.config"
       - ".github/workflows/ec_backend_ci.yml"
 
   # mainへのPull Requestでも実行する
@@ -27,7 +35,15 @@ on:
     branches:
       - main
     paths:
-      - "A_exercise_EC_BE/**"
+      - "Apps/**"
+      - "Tests/**"
+      - "**/*.sql"
+      - "*.sln"
+      - "*.slnx"
+      - "*.props"
+      - "*.targets"
+      - "global.json"
+      - "NuGet.config"
       - ".github/workflows/ec_backend_ci.yml"
 
   # GitHub Actions画面から手動実行できる
@@ -45,7 +61,7 @@ concurrency:
 env:
   # 顧客バックエンドのルート
   # フロントエンドの作業へ移った後も、このパスを基準に確認する
-  BACKEND_DIR: A_exercise_EC_BE
+  BACKEND_DIR: .
 
   # 管理システムと同じ接続文字列キーを使用する
   ConnectionStrings__PostgreSQLConnection: >-
@@ -111,8 +127,26 @@ jobs:
         run: |
           set -euo pipefail
 
+          echo "現在の作業ディレクトリ:"
+          pwd
+
+          echo "リポジトリ直下:"
+          find . -maxdepth 2 \
+            ! -path "*/.git/*" \
+            | sort
+
           test -d "${BACKEND_DIR}"
           test -d "${BACKEND_DIR}/Apps"
+          
+          if [ ! -d "${BACKEND_DIR}/Apps" ]; then
+            echo "::error::Appsディレクトリがありません: ${BACKEND_DIR}/Apps"
+            exit 1
+          fi
+
+          if [ ! -d "${BACKEND_DIR}/Tests" ]; then
+            echo "::error::Testsディレクトリがありません: ${BACKEND_DIR}/Tests"
+            exit 1
+          fi
 
           find_one()
           {
