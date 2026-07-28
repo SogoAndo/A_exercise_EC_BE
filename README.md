@@ -411,8 +411,6 @@ EC APIのローカルHTTPポートは `5100` を使用します。
 ]
 ```
 
-※実際の `Product` クラスのプロパティに合わせて修正してください。
-
 ### ステータスコード
 
 |コード|内容|
@@ -421,6 +419,66 @@ EC APIのローカルHTTPポートは `5100` を使用します。
 |401|未認証|
 |500|システムエラー|
 
+
+# API一覧
+
+## UC004 商品詳細取得
+
+### ベースURL
+
+```
+/products/detail
+```
+
+---
+
+## 1. 商品詳細取得
+
+|項目|内容|
+|---|---|
+|エンドポイント|`GET /products/detail/{productId}`|
+|HTTPメソッド|GET|
+|コントローラー|ProductDetailController|
+|アクションメソッド|GetAsync()|
+
+### 概要
+
+指定された商品UUIDをもとに、商品の詳細情報と現在の在庫数を取得します。
+
+商品が存在する場合、商品詳細情報を返却します。
+
+### パスパラメータ
+
+|項目|型|必須|
+|---|---|---|
+|productId|UUID|○|
+
+### リクエスト例
+
+```
+GET /products/detail/72f394dd-f316-4a76-9c51-0de1af990991
+```
+
+### レスポンス例（200）
+
+```json
+{
+  "productUuid": "72f394dd-f316-4a76-9c51-0de1af990991",
+  "productName": "橙ペン",
+  "price": 120,
+  "productImage": "https://localhost:5126/images/products/a07595ae-b8c1-46c3-80d1-d77724ada1e6.png",
+  "stockQuantity": 10
+}
+```
+
+
+### ステータスコード
+
+|コード|内容|
+|---|---|
+|200|商品詳細取得成功|
+|404|商品が存在しない|
+|500|システムエラー|
 
 # API一覧
 
@@ -492,4 +550,350 @@ Authorization: Bearer {customer access token}
 |400|入力値不正|
 |401|未認証・JWT認証情報不正|
 |404|商品または購入対象なし|
+|500|システムエラー|
+
+
+
+# API一覧
+
+## UC007 購入履歴閲覧
+
+### ベースURL
+
+```
+/purchase/history
+```
+
+---
+
+## 1. 購入履歴一覧取得
+
+|項目|内容|
+|---|---|
+|エンドポイント|`GET /purchase/history`|
+|HTTPメソッド|GET|
+|コントローラー|PurchaseHistoryListController|
+|アクションメソッド|GetAsync()|
+
+### 概要
+
+認証済み顧客の購入履歴一覧を取得します。
+
+購入日時、注文番号、購入金額などの購入履歴情報を返却します。
+
+本APIは顧客JWT認証が必要です。
+
+### 認証
+
+```
+Authorization: Bearer {customer access token}
+```
+
+### リクエスト例
+
+```http
+GET /purchase/history
+Authorization: Bearer {customer access token}
+```
+
+### レスポンス例（200）
+
+```json
+{
+  "orderUuid": "66aa718d-8d59-46c5-876d-9eca090b122e",
+  "orderDate": "2026/07/27 17:18:38",
+  "orderStatusId": 1,
+  "orderStatusName": "受付",
+  "orderItems": [
+    {
+      "productUuid": "10000000-0000-0000-0000-000000000001",
+      "productName": "水性ボールペン(黒)",
+      "price": 120,
+      "quantity": 4,
+      "subtotal": 480
+    }
+  ],
+  "totalPrice": 480
+}
+```
+
+### ステータスコード
+
+|コード|内容|
+|---|---|
+|200|購入履歴取得成功|
+|401|未認証・JWT認証情報不正|
+|500|システムエラー|
+
+
+# API一覧
+
+## UC007 購入履歴閲覧
+
+### ベースURL
+
+```
+/purchase/history
+```
+
+---
+
+## 2. 購入履歴詳細取得
+
+|項目|内容|
+|---|---|
+|エンドポイント|`GET /purchase/history/{orderUuid}`|
+|HTTPメソッド|GET|
+|コントローラー|PurchaseHistoryDetailController|
+|アクションメソッド|GetAsync()|
+
+### 概要
+
+認証済み顧客自身の購入履歴詳細を取得します。
+
+指定した注文UUIDに一致する購入履歴が存在する場合、購入商品の詳細情報を返却します。
+
+本APIは顧客JWT認証が必要です。
+
+### 認証
+
+```
+Authorization: Bearer {customer access token}
+```
+
+### パスパラメータ
+
+|項目|型|必須|
+|---|---|---|
+|orderUuid|UUID|○|
+
+### リクエスト例
+
+```http
+GET /purchase/history/66aa718d-8d59-46c5-876d-9eca090b122e
+Authorization: Bearer {customer access token}
+```
+
+### レスポンス例（200）
+
+```json
+{
+  "orderList": [
+    {
+      "orderUuid": "66aa718d-8d59-46c5-876d-9eca090b122e",
+      "orderDate": "2026/07/27 17:18:38",
+      "orderStatus": "受付",
+      "totalPrice": 480,
+      "detailUrl": "/purchase/history/66aa718d-8d59-46c5-876d-9eca090b122e"
+    }
+  ],
+  "message": null
+}
+```
+
+### レスポンス例（404）
+
+```json
+{
+  "message": "購入履歴が見つかりませんでした。"
+}
+```
+
+### ステータスコード
+
+|コード|内容|
+|---|---|
+|200|購入履歴詳細取得成功|
+|401|未認証・JWT認証情報不正|
+|404|購入履歴が存在しない|
+|500|システムエラー|
+
+
+# API一覧
+
+## UC008 顧客ログアウト
+
+### ベースURL
+
+```
+/
+```
+
+---
+
+## 1. 顧客ログアウト
+
+|項目|内容|
+|---|---|
+|エンドポイント|`POST /logout`|
+|HTTPメソッド|POST|
+|コントローラー|LogoutCustomerController|
+|アクションメソッド|LogoutAsync()|
+
+### 概要
+
+認証済み顧客のログアウトを実行します。
+
+ログアウト処理を実行し、ログアウト結果を返却します。
+
+本APIは顧客JWT認証が必要です。
+
+### 認証
+
+```
+Authorization: Bearer {customer access token}
+```
+
+### リクエスト例
+
+```http
+POST /logout
+Authorization: Bearer {customer access token}
+```
+
+### レスポンス例（200）
+
+```json
+{
+  "loggedOut": true
+}
+```
+
+
+### ステータスコード
+
+|コード|内容|
+|---|---|
+|200|ログアウト成功|
+|401|未認証・JWT認証情報不正|
+|500|システムエラー|
+
+
+
+# API一覧
+
+## 商品カテゴリ取得
+
+### ベースURL
+
+```
+/product-category
+```
+
+---
+
+## 1. 商品カテゴリプルダウン取得
+
+|項目|内容|
+|---|---|
+|エンドポイント|`GET /product-category/options`|
+|HTTPメソッド|GET|
+|コントローラー|ProductCategoryController|
+|アクションメソッド|FindAllOptionsAsync()|
+
+### 概要
+
+商品カテゴリのプルダウン項目一覧を取得します。
+
+商品カテゴリUUIDとカテゴリ名を取得し、商品検索画面などのプルダウン表示に使用します。
+
+### リクエスト例
+
+```http
+GET /product-category/options
+```
+
+### レスポンス例（200）
+
+```json
+[
+  {
+    "value": "e50d978b-b73d-4afb-8e85-ace9cf1e12a7",
+    "label": "文房具"
+  },
+  {
+    "value": "ae4ed829-7017-4972-8187-59384e0b5627",
+    "label": "雑貨"
+  },
+  {
+    "value": "707c67f1-8f9a-457f-af39-f99c66085c45",
+    "label": "パソコン周辺機器"
+  },
+  {
+    "value": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "label": "テストカテゴリ"
+  }
+]
+```
+
+### ステータスコード
+
+|コード|内容|
+|---|---|
+|200|商品カテゴリ取得成功|
+|500|システムエラー|
+
+
+# API一覧
+
+## 支払い方法取得
+
+### ベースURL
+
+```
+/payment-method
+```
+
+---
+
+## 1. 支払い方法プルダウン取得
+
+|項目|内容|
+|---|---|
+|エンドポイント|`GET /payment-method/options`|
+|HTTPメソッド|GET|
+|コントローラー|PaymentMethodController|
+|アクションメソッド|FindAllAsync()|
+
+### 概要
+
+支払い方法のプルダウン項目一覧を取得します。
+
+支払い方法IDと支払い方法名を取得し、購入画面などのプルダウン表示に使用します。
+
+### リクエスト例
+
+```http
+GET /payment-method/options
+```
+
+### レスポンス例（200）
+
+```json
+[
+  {
+    "value": 1,
+    "label": "クレジットカード"
+  },
+  {
+    "value": 2,
+    "label": "PayPay"
+  },
+  {
+    "value": 3,
+    "label": "コンビニ払い"
+  },
+  {
+    "value": 4,
+    "label": "銀行振込"
+  }
+]
+```
+
+
+### ステータスコード
+
+|コード|内容|
+|---|---|
+|200|支払い方法取得成功|
 |500|システムエラー|
