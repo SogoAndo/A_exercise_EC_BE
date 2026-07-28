@@ -137,7 +137,7 @@ jobs:
 
           test -d "${BACKEND_DIR}"
           test -d "${BACKEND_DIR}/Apps"
-          
+
           if [ ! -d "${BACKEND_DIR}/Apps" ]; then
             echo "::error::Appsディレクトリがありません: ${BACKEND_DIR}/Apps"
             exit 1
@@ -148,27 +148,49 @@ jobs:
             exit 1
           fi
 
-          find_one()
-          {
-            local description="$1"
-            shift
+          echo "検出対象のプロジェクトとSQLファイル:"
 
-            mapfile -t matches < <(
-              find "$@" \
-                -type f \
-                ! -path "*/bin/*" \
-                ! -path "*/obj/*" \
-                | sort
-            )
+          find "${BACKEND_DIR}" \
+            -type f \
+            \( \
+              -name "*.sln" \
+              -o -name "*.slnx" \
+              -o -name "*.csproj" \
+              -o -name "*.sql" \
+            \) \
+            ! -path "*/bin/*" \
+            ! -path "*/obj/*" \
+            ! -path "*/coveragereport/*" \
+            | sort
 
-            if [ "${#matches[@]}" -ne 1 ]; then
-              echo "::error::${description}が1件ではありません"
-              printf '%s\n' "${matches[@]}"
-              exit 1
-            fi
+            find_one()
+            {
+              local description="$1"
+              shift
 
-            printf '%s' "${matches[0]}"
-          }
+              mapfile -t matches < <(
+                find "$@" \
+                  -type f \
+                  ! -path "*/bin/*" \
+                  ! -path "*/obj/*" \
+                  | sort
+              )
+
+              if [ "${#matches[@]}" -ne 1 ]; then
+                echo "::error::${description}が1件ではありません" >&2
+                echo "検出件数: ${#matches[@]}" >&2
+
+                if [ "${#matches[@]}" -gt 0 ]; then
+                  printf '%s\n' "${matches[@]}" >&2
+                else
+                  echo "該当ファイルは見つかりませんでした" >&2
+                fi
+
+                return 1
+              fi
+
+              printf '%s' "${matches[0]}"
+            }
 
           mapfile -t solutions < <(
             find "${BACKEND_DIR}" \
