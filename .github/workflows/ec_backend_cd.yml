@@ -74,7 +74,7 @@ jobs:
       # 実際のリポジトリ構造：
       # A_exercise_EC_BE/Apps/A_exercise_EC_BE.Presentations/
       PROJECT_PATH: >-
-        A_exercise_EC_BE/Apps/A_exercise_EC_BE.Presentations/A_exercise_EC_BE.Presentations.csproj
+        Apps/A_exercise_EC_BE.Presentations/A_exercise_EC_BE.Presentations.csproj
 
       # dotnet publish後に生成される起動DLL
       APP_DLL: A_exercise_EC_BE.Presentations.dll
@@ -118,6 +118,25 @@ jobs:
         run: |
           set -euo pipefail
 
+          echo "現在の作業ディレクトリ:"
+          pwd
+          
+          echo "指定された発行対象:"
+          echo "${PROJECT_PATH}"
+
+          if [ ! -f "${PROJECT_PATH}" ]; then
+            echo "::error::発行対象のプロジェクトが見つかりません: ${PROJECT_PATH}"
+          
+                  echo "検出されたプロジェクト:"
+          find . \
+            -type f \
+            -name "*.csproj" \
+            ! -path "*/bin/*" \
+            ! -path "*/obj/*" \
+            | sort
+
+          exit 1
+          fi
           test -f "${PROJECT_PATH}"
 
           echo "発行対象: ${PROJECT_PATH}"
