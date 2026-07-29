@@ -103,7 +103,7 @@ public class ConfirmPurchaseUsecaseTests
             .ReturnsAsync(
                 new PaymentMethod(
                     PaymentMethodId,
-                    "銀行振込"));
+                    "現金"));
 
         _orderStatusRepositoryMock
             .Setup(repository =>
@@ -246,7 +246,7 @@ public class ConfirmPurchaseUsecaseTests
                 .CustomerUuid);
 
         Assert.AreEqual(
-            "銀行振込",
+            "現金",
             createdOrder.PaymentMethod
                 .Name);
 
@@ -568,15 +568,15 @@ public class ConfirmPurchaseUsecaseTests
     }
 
     /// <summary>
-    /// 銀行振込以外の場合は
-    /// 処理を開始しないこと。
+    /// DBに存在する支払い方法であれば、
+    /// 名称にかかわらず購入を確定できること。
     /// </summary>
     [TestMethod(
         DisplayName =
-            "ConfirmAsync_銀行振込以外の場合は"
-            + "DomainExceptionをスローする")]
+            "ConfirmAsync_DBに存在する支払い方法の場合は"
+            + "名称にかかわらず購入を確定できる")]
     public async Task
-        ConfirmAsync_WhenPaymentMethodIsUnsupported_ThrowsDomainException()
+        ConfirmAsync_WhenPaymentMethodExists_DoesNotRestrictByName()
     {
         // Arrange
         _paymentMethodRepositoryMock
@@ -586,26 +586,16 @@ public class ConfirmPurchaseUsecaseTests
             .ReturnsAsync(
                 new PaymentMethod(
                     PaymentMethodId,
-                    "クレジットカード"));
+                    "銀行振込"));
 
         // Act
-        var exception =
-            await Assert
-                .ThrowsExactlyAsync<
-                    DomainException>(
-                    async () =>
-                    {
-                        await _usecase
-                            .ConfirmAsync(
-                                CreateValidRequest());
-                    });
+        var result =
+            await _usecase.ConfirmAsync(
+                CreateValidRequest());
 
         // Assert
-        Assert.AreEqual(
-            "支払い方法は銀行振込のみ選択できます",
-            exception.Message);
-
-        VerifyTransactionNotStarted();
+        Assert.IsNotNull(result);
+        VerifyCommitted();
     }
 
     [TestMethod(

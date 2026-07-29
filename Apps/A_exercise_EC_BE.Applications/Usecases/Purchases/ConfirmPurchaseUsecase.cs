@@ -10,9 +10,6 @@ namespace A_exercise_EC_BE.Applications.Usecases.Purchases;
 public sealed class ConfirmPurchaseUsecase
     : IConfirmPurchaseUsecase
 {
-    private const string AvailablePaymentMethodName =
-        "銀行振込";
-
     private const string InitialOrderStatusName =
         "受付";
 
@@ -249,14 +246,6 @@ public sealed class ConfirmPurchaseUsecase
             throw new NotFoundException(
                 "支払い方法が"
                 + "見つかりません");
-        }
-
-        if (paymentMethod.Name
-            != AvailablePaymentMethodName)
-        {
-            throw new DomainException(
-                "支払い方法は銀行振込のみ"
-                + "選択できます");
         }
 
         return paymentMethod;
