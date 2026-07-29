@@ -1,3 +1,4 @@
+using System.Text.Json;
 using A_exercise_EC_BE.Applications.Security;
 using A_exercise_EC_BE.Applications.Usecases.Customers;
 using A_exercise_EC_BE.Presentations.Controllers;
@@ -57,6 +58,9 @@ public class LoginCustomerControllerTests
         var okResult =
             actionResult.Result as OkObjectResult;
         Assert.IsNotNull(okResult);
+        Assert.AreEqual(
+            200,
+            okResult.StatusCode);
         var response =
             okResult.Value as CustomerLoginResponseViewModel;
         Assert.IsNotNull(response);
@@ -66,6 +70,12 @@ public class LoginCustomerControllerTests
         Assert.AreEqual(
             accessToken.ExpiresAt,
             response.ExpiresAt);
+        Assert.AreEqual(
+            loginResult.Username,
+            response.Username);
+        Assert.AreNotEqual(
+            loginResult.CustomerName,
+            response.Username);
         loginUsecaseMock.Verify(
             usecase => usecase.LoginAsync(
                 new CustomerLoginRequest(
@@ -75,6 +85,46 @@ public class LoginCustomerControllerTests
         tokenIssuerMock.Verify(
             issuer => issuer.Issue(customerUuid),
             Times.Once);
+    }
+
+    [TestMethod]
+    public void CustomerLoginResponse_WithWebJsonDefaults_UsesUsername()
+    {
+        var response = new CustomerLoginResponseViewModel(
+            "customer-access-token",
+            new DateTimeOffset(
+                2026,
+                7,
+                24,
+                3,
+                0,
+                0,
+                TimeSpan.Zero),
+            "taro123");
+        var options = new JsonSerializerOptions(
+            JsonSerializerDefaults.Web);
+
+        var json = JsonSerializer.Serialize(
+            response,
+            options);
+        using var jsonDocument = JsonDocument.Parse(json);
+        var root = jsonDocument.RootElement;
+
+        Assert.AreEqual(
+            "taro123",
+            root.GetProperty("username").GetString());
+        Assert.IsTrue(
+            root.TryGetProperty(
+                "accessToken",
+                out _));
+        Assert.IsTrue(
+            root.TryGetProperty(
+                "expiresAt",
+                out _));
+        Assert.IsFalse(
+            root.TryGetProperty(
+                "customerName",
+                out _));
     }
 
     [TestMethod]
@@ -98,8 +148,12 @@ public class LoginCustomerControllerTests
             loginUsecaseMock.Object,
             tokenIssuerMock.Object);
 
-        await Assert.ThrowsExactlyAsync<UnauthorizedAccessException>(
-            () => controller.LoginAsync(viewModel));
+        var exception =
+            await Assert.ThrowsExactlyAsync<UnauthorizedAccessException>(
+                () => controller.LoginAsync(viewModel));
+        Assert.AreEqual(
+            "メールアドレスまたはパスワードが正しくありません。",
+            exception.Message);
         tokenIssuerMock.Verify(
             issuer => issuer.Issue(It.IsAny<Guid>()),
             Times.Never);

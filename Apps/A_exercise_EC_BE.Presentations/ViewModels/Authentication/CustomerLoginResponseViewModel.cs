@@ -5,4 +5,5 @@ namespace A_exercise_EC_BE.Presentations.ViewModels.Authentication;
 /// </summary>
 public sealed record CustomerLoginResponseViewModel(
     string AccessToken,
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt,
+    string Username);
