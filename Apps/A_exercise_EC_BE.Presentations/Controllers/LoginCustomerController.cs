@@ -45,6 +45,7 @@ public sealed class LoginCustomerController(
         return Ok(
             new CustomerLoginResponseViewModel(
                 accessToken.AccessToken,
-                accessToken.ExpiresAt));
+                accessToken.ExpiresAt,
+                loginResult.Username));
     }
 }
